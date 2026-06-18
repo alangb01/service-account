@@ -11,6 +11,14 @@ import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.AccountResponse;
+import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.CreateAccountRequest;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/accounts")
@@ -29,7 +37,7 @@ public class AccountController {
     }
 
     @PostMapping
-    public ResponseEntity<Account> create(@RequestBody CreateAccountRequest request) {
+    public Mono<AccountResponse> create(@RequestBody CreateAccountRequest request) {
         Account account = new Account(
                 null,
                 request.customerId(),
@@ -39,29 +47,35 @@ public class AccountController {
                 LocalDateTime.now(),
                 true
         );
-        Account created = createAccountUseCase.execute(account);
-        return ResponseEntity.ok(created);
+
+        return createAccountUseCase.execute(account)
+                .map(this::toResponse);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Account> getById(@PathVariable String id) {
+    public Mono<ResponseEntity<AccountResponse>> getById(@PathVariable String id) {
         return getAccountUseCase.byId(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .map(a -> ResponseEntity.ok(toResponse(a)))
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
     @GetMapping
-    public ResponseEntity<List<Account>> list(@RequestParam(required = false) String customerId) {
-        List<Account> result = (customerId == null)
+    public Flux<AccountResponse> list(@RequestParam(required = false) String customerId) {
+        return (customerId == null
                 ? listAccountsUseCase.all()
-                : listAccountsUseCase.byCustomer(customerId);
-        return ResponseEntity.ok(result);
+                : listAccountsUseCase.byCustomer(customerId))
+                .map(this::toResponse);
     }
 
-    public record CreateAccountRequest(
-            String customerId,
-            String number,
-            BigDecimal initialBalance,
-            String currency
-    ) {}
+    private AccountResponse toResponse(Account a) {
+        return new AccountResponse(
+                a.id(),
+                a.customerId(),
+                a.number(),
+                a.balance(),
+                a.currency(),
+                a.createdAt(),
+                a.active()
+        );
+    }
 }

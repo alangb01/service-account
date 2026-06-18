@@ -1,19 +1,18 @@
 package pe.nom.charlygastelo.app.accountservice.domain.port;
 
 import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
-
-import java.util.List;
-import java.util.Optional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public interface AccountServicePort {
 
-    Account create(Account account);
+    Mono<Account> create(Account account);
 
-    Optional<Account> getById(String id);
+    Mono<Account> getById(String id);
 
-    Optional<Account> getByNumber(String number);
+    Mono<Account> getByNumber(String number);
 
-    List<Account> getByCustomer(String customerId);
+    Flux<Account> getByCustomer(String customerId);
 
-    List<Account> getAll();
+    Flux<Account> getAll();
 }

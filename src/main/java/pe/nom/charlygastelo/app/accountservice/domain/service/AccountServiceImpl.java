@@ -4,8 +4,8 @@ import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
 import pe.nom.charlygastelo.app.accountservice.domain.port.AccountRepositoryPort;
 import pe.nom.charlygastelo.app.accountservice.domain.port.AccountServicePort;
 
-import java.util.List;
-import java.util.Optional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class AccountServiceImpl implements AccountServicePort {
 
@@ -16,31 +16,28 @@ public class AccountServiceImpl implements AccountServicePort {
     }
 
     @Override
-    public Account create(Account account) {
-        // Aquí puedes aplicar reglas de negocio:
-        // - validar número único
-        // - validar moneda
-        // - validar cliente existente
+    public Mono<Account> create(Account account) {
+        // Aquí puedes meter reglas de negocio (validar número único, etc.)
         return repository.save(account);
     }
 
     @Override
-    public Optional<Account> getById(String id) {
+    public Mono<Account> getById(String id) {
         return repository.findById(id);
     }
 
     @Override
-    public Optional<Account> getByNumber(String number) {
+    public Mono<Account> getByNumber(String number) {
         return repository.findByNumber(number);
     }
 
     @Override
-    public List<Account> getByCustomer(String customerId) {
+    public Flux<Account> getByCustomer(String customerId) {
         return repository.findByCustomerId(customerId);
     }
 
     @Override
-    public List<Account> getAll() {
+    public Flux<Account> getAll() {
         return repository.findAll();
     }
 }

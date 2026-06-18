@@ -3,8 +3,8 @@ package pe.nom.charlygastelo.app.accountservice.application.usecase;
 
 import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
 import pe.nom.charlygastelo.app.accountservice.domain.port.AccountServicePort;
+import reactor.core.publisher.Flux;
 
-import java.util.List;
 
 public class ListAccountsUseCase {
 
@@ -14,11 +14,11 @@ public class ListAccountsUseCase {
         this.service = service;
     }
 
-    public List<Account> all() {
+    public Flux<Account> all() {
         return service.getAll();
     }
 
-    public List<Account> byCustomer(String customerId) {
+    public Flux<Account> byCustomer(String customerId) {
         return service.getByCustomer(customerId);
     }
 }

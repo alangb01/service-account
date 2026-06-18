@@ -9,13 +9,12 @@ import pe.nom.charlygastelo.app.accountservice.domain.port.AccountRepositoryPort
 import pe.nom.charlygastelo.app.accountservice.domain.port.AccountServicePort;
 import pe.nom.charlygastelo.app.accountservice.domain.service.AccountServiceImpl;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.persistence.AccountRepositoryAdapter;
-import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.persistence.SpringDataAccountRepository;
-
+import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.persistence.ReactiveAccountRepository;
 @Configuration
 public class BeanConfig {
 
     @Bean
-    public AccountRepositoryPort accountRepositoryPort(SpringDataAccountRepository repository) {
+    public AccountRepositoryPort accountRepositoryPort(ReactiveAccountRepository repository) {
         return new AccountRepositoryAdapter(repository);
     }
 

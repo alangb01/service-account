@@ -2,6 +2,7 @@ package pe.nom.charlygastelo.app.accountservice.application.usecase;
 
 import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
 import pe.nom.charlygastelo.app.accountservice.domain.port.AccountServicePort;
+import reactor.core.publisher.Mono;
 
 public class CreateAccountUseCase {
 
@@ -11,7 +12,7 @@ public class CreateAccountUseCase {
         this.service = service;
     }
 
-    public Account execute(Account account) {
+    public Mono<Account> execute(Account account) {
         return service.create(account);
     }
 }

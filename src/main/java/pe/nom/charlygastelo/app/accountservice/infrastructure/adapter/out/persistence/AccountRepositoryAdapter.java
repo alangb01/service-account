@@ -1,52 +1,65 @@
 package pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.persistence;
 
-import org.springframework.data.jpa.repository.JpaRepository;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
 import pe.nom.charlygastelo.app.accountservice.domain.port.AccountRepositoryPort;
-
-import java.util.List;
-import java.util.Optional;
-
-import java.util.List;
-import java.util.Optional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class AccountRepositoryAdapter implements AccountRepositoryPort {
 
-    private final SpringDataAccountRepository repository;
+    private final ReactiveAccountRepository repository;
 
-    public AccountRepositoryAdapter(SpringDataAccountRepository repository) {
+    public AccountRepositoryAdapter(ReactiveAccountRepository repository) {
         this.repository = repository;
     }
 
     @Override
-    public Account save(Account account) {
-        AccountEntity entity = AccountEntity.fromDomain(account);
-        return repository.save(entity).toDomain();
+    public Mono<Account> save(Account account) {
+        AccountDocument doc = toDocument(account);
+        return repository.save(doc).map(this::toDomain);
     }
 
     @Override
-    public Optional<Account> findById(String id) {
-        return repository.findById(id).map(AccountEntity::toDomain);
+    public Mono<Account> findById(String id) {
+        return repository.findById(id).map(this::toDomain);
     }
 
     @Override
-    public Optional<Account> findByNumber(String number) {
-        return repository.findByNumber(number).map(AccountEntity::toDomain);
+    public Mono<Account> findByNumber(String number) {
+        return repository.findByNumber(number).map(this::toDomain);
     }
 
     @Override
-    public List<Account> findByCustomerId(String customerId) {
-        return repository.findByCustomerId(customerId)
-                .stream()
-                .map(AccountEntity::toDomain)
-                .toList();
+    public Flux<Account> findByCustomerId(String customerId) {
+        return repository.findByCustomerId(customerId).map(this::toDomain);
     }
 
     @Override
-    public List<Account> findAll() {
-        return repository.findAll()
-                .stream()
-                .map(AccountEntity::toDomain)
-                .toList();
+    public Flux<Account> findAll() {
+        return repository.findAll().map(this::toDomain);
+    }
+
+    private AccountDocument toDocument(Account a) {
+        AccountDocument d = new AccountDocument();
+        d.setId(a.id());
+        d.setCustomerId(a.customerId());
+        d.setNumber(a.number());
+        d.setBalance(a.balance());
+        d.setCurrency(a.currency());
+        d.setCreatedAt(a.createdAt());
+        d.setActive(a.active());
+        return d;
+    }
+
+    private Account toDomain(AccountDocument d) {
+        return new Account(
+                d.getId(),
+                d.getCustomerId(),
+                d.getNumber(),
+                d.getBalance(),
+                d.getCurrency(),
+                d.getCreatedAt(),
+                d.isActive()
+        );
     }
 }

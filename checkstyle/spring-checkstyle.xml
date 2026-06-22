@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<module name="Checker">
+
+    <!-- Longitud máxima de línea -->
+    <module name="LineLength">
+        <property name="max" value="140"/>
+    </module>
+
+    <!-- Evitar tabs -->
+    <module name="FileTabCharacter">
+        <property name="eachLine" value="true"/>
+    </module>
+
+    <module name="TreeWalker">
+
+        <!-- Nombres -->
+        <module name="TypeName"/>
+        <module name="MethodName"/>
+        <module name="LocalVariableName"/>
+        <module name="ConstantName"/>
+
+        <!-- Imports -->
+        <module name="UnusedImports"/>
+        <module name="ImportOrder">
+            <property name="option" value="top"/>
+            <property name="groups" value="java,javax,org,com"/>
+            <property name="ordered" value="true"/>
+            <property name="separated" value="true"/>
+        </module>
+
+        <!-- Llaves -->
+        <module name="LeftCurly">
+            <property name="option" value="eol"/>
+            <property name="tokens" value="CLASS_DEF, INTERFACE_DEF, ENUM_DEF"/>
+        </module>
+
+        <module name="LeftCurly">
+            <property name="option" value="eol"/>
+            <property name="tokens" value="METHOD_DEF, CTOR_DEF"/>
+        </module>
+
+        <module name="RightCurly">
+            <property name="option" value="alone"/>
+        </module>
+
+        <!-- Espacios -->
+        <module name="WhitespaceAfter"/>
+        <module name="WhitespaceAround"/>
+
+    </module>
+
+</module>

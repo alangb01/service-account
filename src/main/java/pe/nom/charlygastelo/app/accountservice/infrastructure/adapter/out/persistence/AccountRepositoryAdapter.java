@@ -39,15 +39,24 @@ public class AccountRepositoryAdapter implements AccountRepositoryPort {
         return repository.findAll().map(this::toDomain);
     }
 
+
+    @Override
+    public Mono<Void> deleteById(String id) {
+        return repository.deleteById(id);
+    }
+
     private AccountDocument toDocument(Account a) {
         AccountDocument d = new AccountDocument();
         d.setId(a.id());
         d.setCustomerId(a.customerId());
+        d.setCustomerType(a.customerType());
         d.setNumber(a.number());
+        d.setType(a.type());
         d.setBalance(a.balance());
         d.setCurrency(a.currency());
         d.setCreatedAt(a.createdAt());
         d.setActive(a.active());
+        d.setStatus(a.status());
         return d;
     }
 
@@ -55,11 +64,14 @@ public class AccountRepositoryAdapter implements AccountRepositoryPort {
         return new Account(
                 d.getId(),
                 d.getCustomerId(),
+                d.getCustomerType(),
                 d.getNumber(),
+                d.getType(),
                 d.getBalance(),
                 d.getCurrency(),
                 d.getCreatedAt(),
-                d.isActive()
+                d.isActive(),
+                d.getStatus()
         );
     }
 }

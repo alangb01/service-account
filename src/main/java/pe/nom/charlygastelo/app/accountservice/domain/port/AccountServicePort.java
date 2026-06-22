@@ -8,6 +8,10 @@ public interface AccountServicePort {
 
     Mono<Account> create(Account account);
 
+    Mono<Account> update(String id, Account account);
+
+    Mono<Account> delete(String id);
+
     Mono<Account> getById(String id);
 
     Mono<Account> getByNumber(String number);

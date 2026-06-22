@@ -4,8 +4,6 @@ import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
 import pe.nom.charlygastelo.app.accountservice.domain.port.AccountServicePort;
 import reactor.core.publisher.Mono;
 
-import java.util.Optional;
-
 public class GetAccountUseCase {
 
     private final AccountServicePort service;

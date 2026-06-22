@@ -2,16 +2,15 @@ package pe.nom.charlygastelo.app.accountservice.infrastructure.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import pe.nom.charlygastelo.app.accountservice.application.usecase.CreateAccountUseCase;
-import pe.nom.charlygastelo.app.accountservice.application.usecase.GetAccountUseCase;
-import pe.nom.charlygastelo.app.accountservice.application.usecase.ListAccountsUseCase;
+
+import pe.nom.charlygastelo.app.accountservice.application.usecase.*;
 import pe.nom.charlygastelo.app.accountservice.domain.port.AccountRepositoryPort;
 import pe.nom.charlygastelo.app.accountservice.domain.port.AccountServicePort;
 import pe.nom.charlygastelo.app.accountservice.domain.service.AccountServiceImpl;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.persistence.AccountRepositoryAdapter;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.persistence.ReactiveAccountRepository;
 @Configuration
-public class BeanConfig {
+public class    BeanConfig {
 
     @Bean
     public AccountRepositoryPort accountRepositoryPort(ReactiveAccountRepository repository) {
@@ -36,5 +35,16 @@ public class BeanConfig {
     @Bean
     public ListAccountsUseCase listAccountsUseCase(AccountServicePort servicePort) {
         return new ListAccountsUseCase(servicePort);
+    }
+
+
+    @Bean
+    public UpdateAccountUseCase updateAccountUseCase(AccountServicePort servicePort) {
+        return new UpdateAccountUseCase(servicePort);
+    }
+
+    @Bean
+    public DeleteAccountUseCase deleteAccountUseCase(AccountServicePort servicePort) {
+        return new DeleteAccountUseCase(servicePort);
     }
 }

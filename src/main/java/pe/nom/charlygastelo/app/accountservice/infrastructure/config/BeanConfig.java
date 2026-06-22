@@ -9,6 +9,9 @@ import pe.nom.charlygastelo.app.accountservice.domain.port.AccountServicePort;
 import pe.nom.charlygastelo.app.accountservice.domain.service.AccountServiceImpl;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.persistence.AccountRepositoryAdapter;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.persistence.ReactiveAccountRepository;
+import pe.nom.charlygastelo.app.accountservice.infrastructure.clients.CustomerClient;
+import pe.nom.charlygastelo.app.accountservice.infrastructure.events.AccountEventProducer;
+
 @Configuration
 public class    BeanConfig {
 
@@ -18,13 +21,13 @@ public class    BeanConfig {
     }
 
     @Bean
-    public AccountServicePort accountServicePort(AccountRepositoryPort repositoryPort) {
-        return new AccountServiceImpl(repositoryPort);
+    public AccountServicePort accountServicePort(AccountRepositoryPort repositoryPort, CustomerClient customerClient) {
+        return new AccountServiceImpl(repositoryPort, customerClient);
     }
 
     @Bean
-    public CreateAccountUseCase createAccountUseCase(AccountServicePort servicePort) {
-        return new CreateAccountUseCase(servicePort);
+    public CreateAccountUseCase createAccountUseCase(AccountServicePort servicePort, CustomerClient customerClient, AccountEventProducer eventPublisher) {
+        return new CreateAccountUseCase(servicePort, customerClient,eventPublisher);
     }
 
     @Bean

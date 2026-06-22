@@ -5,21 +5,37 @@ import pe.nom.charlygastelo.app.accountservice.domain.model.AccountType;
 import pe.nom.charlygastelo.app.accountservice.domain.model.CustomerType;
 import pe.nom.charlygastelo.app.accountservice.domain.port.AccountRepositoryPort;
 import pe.nom.charlygastelo.app.accountservice.domain.port.AccountServicePort;
+import pe.nom.charlygastelo.app.accountservice.infrastructure.clients.CustomerClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class AccountServiceImpl implements AccountServicePort {
 
     private final AccountRepositoryPort repository;
+    private final CustomerClient customerClient;
 
-    public AccountServiceImpl(AccountRepositoryPort repository) {
+    public AccountServiceImpl(AccountRepositoryPort repository, CustomerClient customerClient) {
         this.repository = repository;
+        this.customerClient = customerClient;
     }
 
     @Override
     public Mono<Account> create(Account account) {
         return validateAccountCreation(account)
+                .then(validateCustomerExists(account.customerId()))
                 .then(repository.save(account));
+    }
+
+    private Mono<Void> validateCustomerExists(String customerId) {
+        return customerClient.getCustomer(customerId)
+                .switchIfEmpty(Mono.error(new IllegalArgumentException("Customer not found")))
+                .flatMap(customer -> {
+                    if ("ACCOUNT_SERVICE_UNAVAILABLE".equals(customer.status())) {
+                        return Mono.error(new IllegalStateException("Customer service is unavailable"));
+                    }
+
+                    return Mono.empty();
+                });
     }
 
     @Override
@@ -66,6 +82,8 @@ public class AccountServiceImpl implements AccountServicePort {
                     return repository.save(inactiveAccount);
                 });
     }
+
+
 
     private Mono<Void> validateAccountCreation(Account account) {
         if (account.customerId() == null || account.customerId().isBlank()) {

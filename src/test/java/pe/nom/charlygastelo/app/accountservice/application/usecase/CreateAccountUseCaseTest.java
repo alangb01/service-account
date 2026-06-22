@@ -9,6 +9,8 @@ import pe.nom.charlygastelo.app.accountservice.domain.model.CustomerType;
 import pe.nom.charlygastelo.app.accountservice.domain.port.AccountServicePort;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.CreateAccountRequest;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.UpdateAccountRequest;
+import pe.nom.charlygastelo.app.accountservice.infrastructure.clients.CustomerClient;
+import pe.nom.charlygastelo.app.accountservice.infrastructure.events.AccountEventProducer;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -23,7 +25,9 @@ import static org.mockito.Mockito.when;
 
 public class CreateAccountUseCaseTest {
     private final AccountServicePort accountServicePort = mock(AccountServicePort.class);
-    private final CreateAccountUseCase createAccountUseCase = new CreateAccountUseCase(accountServicePort);
+    private final AccountEventProducer accountEventProducer= mock(AccountEventProducer.class);
+    private final CustomerClient customerClient = mock(CustomerClient.class);
+    private final CreateAccountUseCase createAccountUseCase = new CreateAccountUseCase(accountServicePort,customerClient,accountEventProducer);
 
     @Test
     void executeShouldCreateAccountSuccessfully() {

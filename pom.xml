@@ -20,6 +20,8 @@
     <properties>
         <java.version>17</java.version>
         <springdoc.version>2.6.0</springdoc.version>
+        <confluent.version>7.6.1</confluent.version>
+        <avro.version>1.11.3</avro.version>
 
 <!--        &lt;!&ndash; Header &ndash;&gt;-->
 <!--        <headerType>regexp</headerType>-->
@@ -36,7 +38,16 @@
 <!--        <javadocVariableCheckScopeProperty>scope</javadocVariableCheckScopeProperty>-->
     </properties>
 
-
+    <repositories>
+        <!-- Confluent (para kafka-avro-serializer) -->
+        <repository>
+            <id>confluent</id>
+            <name>Confluent</name>
+            <url>https://packages.confluent.io/maven/</url>
+            <releases><enabled>true</enabled></releases>
+            <snapshots><enabled>false</enabled></snapshots>
+        </repository>
+    </repositories>
     <!-- SPRING CLOUD -->
     <dependencyManagement>
         <dependencies>
@@ -82,6 +93,9 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
+
+
+
 
         <!-- Resilience4j -->
         <dependency>
@@ -162,6 +176,23 @@
             <artifactId>logstash-logback-encoder</artifactId>
             <version>7.4</version>
         </dependency>
+
+        <!--  Kafka      -->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+        </dependency>
+        <!-- Avro serializer (Confluent) -->
+        <dependency>
+            <groupId>io.confluent</groupId>
+            <artifactId>kafka-avro-serializer</artifactId>
+            <version>${confluent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+            <version>${avro.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -211,6 +242,24 @@
                 </executions>
             </plugin>
 
+            <!-- AVRO-->
+            <plugin>
+                <groupId>org.apache.avro</groupId>
+                <artifactId>avro-maven-plugin</artifactId>
+                <version>1.11.1</version>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>schema</goal>
+                        </goals>
+                        <configuration>
+                            <sourceDirectory>${project.basedir}/src/main/avro</sourceDirectory>
+                            <outputDirectory>${project.basedir}/target/generated-sources/avro</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- Spring Boot -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>

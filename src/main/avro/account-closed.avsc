@@ -1,0 +1,9 @@
+{
+  "type": "record",
+  "name": "AccountClosedEvent",
+  "namespace": "pe.nom.charlygastelo.app.customerservice.infrastructure.avro.events",
+  "fields": [
+    { "name": "accountId", "type": "string" },
+    { "name": "closedAt", "type": "long" }
+  ]
+}

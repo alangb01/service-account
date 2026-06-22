@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "AccountUpdatedEvent",
+  "namespace": "pe.nom.charlygastelo.app.customerservice.infrastructure.avro.events",
+  "fields": [
+    { "name": "accountId", "type": "string" },
+    { "name": "customerId", "type": "string" },
+    { "name": "accountType", "type": "string" },
+    { "name": "updatedAt", "type": "long" }
+  ]
+}

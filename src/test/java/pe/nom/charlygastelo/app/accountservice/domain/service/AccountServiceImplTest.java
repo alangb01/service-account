@@ -5,6 +5,7 @@ import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
 import pe.nom.charlygastelo.app.accountservice.domain.port.AccountRepositoryPort;
 import pe.nom.charlygastelo.app.accountservice.domain.model.AccountType;
 import pe.nom.charlygastelo.app.accountservice.domain.model.CustomerType;
+import pe.nom.charlygastelo.app.accountservice.infrastructure.clients.CustomerClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -19,7 +20,8 @@ import static org.mockito.Mockito.when;
 class AccountServiceImplTest {
 
     private final AccountRepositoryPort repository = mock(AccountRepositoryPort.class);
-    private final AccountServiceImpl service = new AccountServiceImpl(repository);
+    private final CustomerClient customerClient = mock(CustomerClient.class);
+    private final AccountServiceImpl service = new AccountServiceImpl(repository, customerClient);
 
     @Test
     void createShouldSaveAccountSuccessfully() {

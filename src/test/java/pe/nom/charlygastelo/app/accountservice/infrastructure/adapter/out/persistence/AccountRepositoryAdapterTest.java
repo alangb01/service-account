@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
 import pe.nom.charlygastelo.app.accountservice.domain.model.AccountType;
 import pe.nom.charlygastelo.app.accountservice.domain.model.CustomerType;
+import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.mapper.AccountPersistentMapper;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -19,7 +20,8 @@ import static org.mockito.Mockito.when;
 class AccountRepositoryAdapterTest {
 
     private final ReactiveAccountRepository repository = mock(ReactiveAccountRepository.class);
-    private final AccountRepositoryAdapter adapter = new AccountRepositoryAdapter(repository);
+    private final AccountPersistentMapper mapper = mock(AccountPersistentMapper.class);
+    private final AccountRepositoryAdapter adapter = new AccountRepositoryAdapter(repository, mapper);
 
     @Test
     void saveShouldPersistDocumentAndReturnDomainAccount() {
@@ -28,12 +30,13 @@ class AccountRepositoryAdapterTest {
         Account account = new Account(
                 null,
                 "customer-001",
-                CustomerType.PERSONAL,
                 "ACC-001",
                 AccountType.SAVINGS,
                 BigDecimal.valueOf(1000),
                 "PEN",
                 createdAt,
+                null,
+                null,
                 true,
                 "ACTIVE"
         );

@@ -15,39 +15,21 @@
     <groupId>pe.nom.charlygastelo.app</groupId>
     <artifactId>account-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>account-service</name>
 
     <properties>
         <java.version>17</java.version>
-        <springdoc.version>2.6.0</springdoc.version>
+        <springdoc.version>2.8.9</springdoc.version>
         <confluent.version>7.6.1</confluent.version>
         <avro.version>1.11.3</avro.version>
-
-<!--        &lt;!&ndash; Header &ndash;&gt;-->
-<!--        <headerType>regexp</headerType>-->
-<!--        <headerFile>${project.basedir}/header.txt</headerFile>-->
-<!--        <headerCopyrightPattern>Copyright</headerCopyrightPattern>-->
-
-<!--        &lt;!&ndash; Root package &ndash;&gt;-->
-<!--        <projectRootPackage>pe.nom.charlygastelo.app</projectRootPackage>-->
-
-<!--        &lt;!&ndash; Static import excludes &ndash;&gt;-->
-<!--        <avoidStaticImportExcludes>org.assertj.core.api.Assertions</avoidStaticImportExcludes>-->
-
-<!--        &lt;!&ndash; Javadoc variable scope &ndash;&gt;-->
-<!--        <javadocVariableCheckScopeProperty>scope</javadocVariableCheckScopeProperty>-->
     </properties>
 
     <repositories>
-        <!-- Confluent (para kafka-avro-serializer) -->
         <repository>
             <id>confluent</id>
-            <name>Confluent</name>
             <url>https://packages.confluent.io/maven/</url>
-            <releases><enabled>true</enabled></releases>
-            <snapshots><enabled>false</enabled></snapshots>
         </repository>
     </repositories>
+
     <!-- SPRING CLOUD -->
     <dependencyManagement>
         <dependencies>
@@ -69,10 +51,23 @@
             <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
 
+        <!-- RxJava 3 -->
+        <dependency>
+            <groupId>io.reactivex.rxjava3</groupId>
+            <artifactId>rxjava</artifactId>
+            <version>3.1.8</version>
+        </dependency>
+
         <!-- MongoDB Reactive -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-mongodb-reactive</artifactId>
+        </dependency>
+
+        <!-- REDIS -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis-reactive</artifactId>
         </dependency>
 
         <!-- Eureka Client -->
@@ -94,33 +89,17 @@
             <optional>true</optional>
         </dependency>
 
-
-
-
         <!-- Resilience4j -->
         <dependency>
             <groupId>io.github.resilience4j</groupId>
             <artifactId>resilience4j-spring-boot3</artifactId>
         </dependency>
-
         <dependency>
             <groupId>io.github.resilience4j</groupId>
             <artifactId>resilience4j-reactor</artifactId>
         </dependency>
 
-        <!-- Testing -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>io.projectreactor</groupId>
-            <artifactId>reactor-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-
+        <!-- Spring Cloud Config -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-config</artifactId>
@@ -131,24 +110,26 @@
             <artifactId>spring-cloud-starter-bootstrap</artifactId>
         </dependency>
 
-        <!-- OpenAPI / Swagger UI -->
+        <!-- OpenAPI WebFlux -->
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
             <version>${springdoc.version}</version>
         </dependency>
 
+        <!-- Actuator -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-        <!-- Micrometer Prometheus: exporta métricas en formato Prometheus -->
+
+        <!-- Prometheus -->
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
 
-        <!-- OpenTelemetry (versiones alineadas por BOM, sin especificar versión) -->
+        <!-- OpenTelemetry -->
         <dependency>
             <groupId>io.opentelemetry</groupId>
             <artifactId>opentelemetry-api</artifactId>
@@ -161,65 +142,61 @@
             <groupId>io.opentelemetry</groupId>
             <artifactId>opentelemetry-exporter-otlp</artifactId>
         </dependency>
-
-        <!-- Starter para Spring Boot con BOM -->
         <dependency>
             <groupId>io.opentelemetry.instrumentation</groupId>
             <artifactId>opentelemetry-spring-boot-3</artifactId>
             <version>2.4.0-alpha</version>
         </dependency>
 
-
-        <!-- Logstash Encoder para enviar logs a Elastic -->
+        <!-- Logstash -->
         <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
             <version>7.4</version>
         </dependency>
 
-        <!--  Kafka      -->
+        <!-- Kafka -->
         <dependency>
             <groupId>org.springframework.kafka</groupId>
             <artifactId>spring-kafka</artifactId>
         </dependency>
+
         <!-- Avro serializer (Confluent) -->
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-avro-serializer</artifactId>
             <version>${confluent.version}</version>
         </dependency>
+
+        <!-- Avro -->
         <dependency>
             <groupId>org.apache.avro</groupId>
             <artifactId>avro</artifactId>
             <version>${avro.version}</version>
         </dependency>
+
+        <!-- Testing -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
         <plugins>
+
             <!-- Jacoco -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.10</version>
-                <executions>
-                    <!-- Inserta el agente para capturar cobertura -->
-                    <execution>
-                        <id>prepare-agent</id>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                    </execution>
-
-                    <!-- Genera el reporte HTML -->
-                    <execution>
-                        <id>report</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
 
             <!-- Checkstyle -->
@@ -227,32 +204,17 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <version>3.3.1</version>
-                <configuration>
-                    <configLocation>checkstyle/spring-checkstyle.xml</configLocation>
-                    <consoleOutput>true</consoleOutput>
-                    <failsOnError>true</failsOnError>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
 
-            <!-- AVRO-->
+            <!-- AVRO -->
             <plugin>
                 <groupId>org.apache.avro</groupId>
                 <artifactId>avro-maven-plugin</artifactId>
-                <version>1.11.1</version>
+                <version>1.11.3</version>
                 <executions>
                     <execution>
                         <phase>generate-sources</phase>
-                        <goals>
-                            <goal>schema</goal>
-                        </goals>
+                        <goals><goal>schema</goal></goals>
                         <configuration>
                             <sourceDirectory>${project.basedir}/src/main/avro</sourceDirectory>
                             <outputDirectory>${project.basedir}/target/generated-sources/avro</outputDirectory>
@@ -260,6 +222,7 @@
                     </execution>
                 </executions>
             </plugin>
+
             <!-- Spring Boot -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>

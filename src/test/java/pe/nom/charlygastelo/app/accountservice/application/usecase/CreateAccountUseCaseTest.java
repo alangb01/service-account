@@ -1,14 +1,11 @@
 package pe.nom.charlygastelo.app.accountservice.application.usecase;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.test.web.reactive.server.WebTestClient;
-import pe.nom.charlygastelo.app.accountservice.application.usecase.*;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
 import pe.nom.charlygastelo.app.accountservice.domain.model.AccountType;
-import pe.nom.charlygastelo.app.accountservice.domain.model.CustomerType;
-import pe.nom.charlygastelo.app.accountservice.domain.port.AccountServicePort;
-import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.CreateAccountRequest;
-import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.UpdateAccountRequest;
+import pe.nom.charlygastelo.app.accountservice.domain.port.AccountRepositoryPort;
+import pe.nom.charlygastelo.app.accountservice.domain.port.CustomerClientPort;
+import pe.nom.charlygastelo.app.accountservice.domain.service.AccountDomainService;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.clients.CustomerClient;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.events.AccountEventProducer;
 import reactor.core.publisher.Flux;
@@ -24,46 +21,49 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class CreateAccountUseCaseTest {
-    private final AccountServicePort accountServicePort = mock(AccountServicePort.class);
+    private final AccountRepositoryPort accountRepository= mock(AccountRepositoryPort.class);
+    private final AccountDomainService accountDomainService = mock(AccountDomainService.class);
     private final AccountEventProducer accountEventProducer= mock(AccountEventProducer.class);
-    private final CustomerClient customerClient = mock(CustomerClient.class);
-    private final CreateAccountUseCase createAccountUseCase = new CreateAccountUseCase(accountServicePort,customerClient,accountEventProducer);
+    private final CustomerClientPort customerClient = mock(CustomerClient.class);
+    private final CreateAccountUseCase createAccountUseCase = new CreateAccountUseCase(accountRepository,accountDomainService,accountEventProducer,customerClient);
 
     @Test
     void executeShouldCreateAccountSuccessfully() {
         Account accountToCreate = new Account(
                 null,
                 "customer-001",
-                CustomerType.PERSONAL,
                 "ACC-001",
                 AccountType.SAVINGS,
                 BigDecimal.valueOf(1000),
                 "PEN",
                 null,
+                null,
+                null,
                 true,
-                "ACTIVE"
+                null
         );
 
         Account createdAccount = new Account(
                 "account-001",
                 "customer-001",
-                CustomerType.PERSONAL,
                 "ACC-001",
                 AccountType.SAVINGS,
                 BigDecimal.valueOf(1000),
                 "PEN",
                 LocalDateTime.now(),
+                null,
+                null,
                 true,
                 "ACTIVE"
         );
 
-        when(accountServicePort.create(accountToCreate)).thenReturn(Mono.just(createdAccount));
+        when(accountRepository.save(accountToCreate)).thenReturn(Mono.just(createdAccount));
 
         StepVerifier.create(createAccountUseCase.execute(accountToCreate))
                 .expectNext(createdAccount)
                 .verifyComplete();
 
-        verify(accountServicePort).create(accountToCreate);
+        verify(accountRepository).save(accountToCreate);
     }
 
     @Test
@@ -71,11 +71,12 @@ public class CreateAccountUseCaseTest {
         Account accountToCreate = new Account(
                 null,
                 "customer-001",
-                CustomerType.PERSONAL,
                 "ACC-001",
                 AccountType.SAVINGS,
                 BigDecimal.valueOf(1000),
                 "PEN",
+                null,
+                null,
                 null,
                 true,
                 "ACTIVE"
@@ -83,7 +84,7 @@ public class CreateAccountUseCaseTest {
 
         RuntimeException exception = new RuntimeException("Error creating account");
 
-        when(accountServicePort.create(accountToCreate)).thenReturn(Mono.error(exception));
+        when(accountRepository.save(accountToCreate)).thenReturn(Mono.error(exception));
 
         StepVerifier.create(createAccountUseCase.execute(accountToCreate))
                 .expectErrorMatches(error ->
@@ -92,19 +93,20 @@ public class CreateAccountUseCaseTest {
                 )
                 .verify();
 
-        verify(accountServicePort).create(accountToCreate);
+        verify(accountRepository).save(accountToCreate);
     }
 
     private Account account(String id, String customerId, String number, BigDecimal balance, String currency) {
         return new Account(
                 id,
                 customerId,
-                CustomerType.PERSONAL,
                 number,
                 AccountType.SAVINGS,
                 balance,
                 currency,
                 LocalDateTime.now(),
+                null,
+                null,
                 true,
                 "ACTIVE"
         );

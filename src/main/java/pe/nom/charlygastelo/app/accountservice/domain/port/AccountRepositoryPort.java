@@ -1,20 +1,27 @@
 package pe.nom.charlygastelo.app.accountservice.domain.port;
 
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.Maybe;
+import io.reactivex.rxjava3.core.Single;
+import org.checkerframework.checker.units.qual.A;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 public interface AccountRepositoryPort {
 
-    Mono<Account> save(Account account);
+    Single<Account> save(Account account);
 
-    Mono<Account> findById(String id);
+    Maybe<Account> findById(String id);
 
-    Mono<Account> findByNumber(String number);
+    Flowable<Account> findByCustomerId(String customerId);
 
-    Flux<Account> findByCustomerId(String customerId);
+    Flowable<Account> findAll();
 
-    Flux<Account> findAll();
+    Completable deleteById(String id);
 
-    Mono<Void> deleteById(String id);
+    Maybe<Account> findByNumber(String number);
+
+    Flowable<Account> findByCustomerIdAndType(String customerId, String type);
+
+    Single<Boolean> existsById(String id);
 }

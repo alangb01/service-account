@@ -1,77 +1,65 @@
 package pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.persistence;
 
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.Maybe;
+import io.reactivex.rxjava3.core.Single;
+import lombok.RequiredArgsConstructor;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
 import pe.nom.charlygastelo.app.accountservice.domain.port.AccountRepositoryPort;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.mapper.AccountPersistentMapper;
 
+import java.util.concurrent.Flow;
+
+@RequiredArgsConstructor
 public class AccountRepositoryAdapter implements AccountRepositoryPort {
 
     private final ReactiveAccountRepository repository;
+    private final AccountPersistentMapper mapper;
 
-    public AccountRepositoryAdapter(ReactiveAccountRepository repository) {
-        this.repository = repository;
+    @Override
+    public Single<Account> save(Account account) {
+        return Single.fromPublisher(repository.save(mapper.toDocument(account)).map(mapper::toDomain));
     }
 
     @Override
-    public Mono<Account> save(Account account) {
-        AccountDocument doc = toDocument(account);
-        return repository.save(doc).map(this::toDomain);
+    public Maybe<Account> findById(String id) {
+        return Maybe.fromPublisher(repository.findById(id).map(mapper::toDomain));
     }
 
     @Override
-    public Mono<Account> findById(String id) {
-        return repository.findById(id).map(this::toDomain);
+    public Flowable<Account> findByCustomerId(String customerId) {
+        return Flowable.fromPublisher(repository.findByCustomerId(customerId).map(mapper::toDomain));
     }
 
     @Override
-    public Mono<Account> findByNumber(String number) {
-        return repository.findByNumber(number).map(this::toDomain);
+    public Maybe<Account> findByNumber(String number) {
+        return Maybe.fromPublisher(repository.findByNumber(number).map(mapper::toDomain));
     }
 
     @Override
-    public Flux<Account> findByCustomerId(String customerId) {
-        return repository.findByCustomerId(customerId).map(this::toDomain);
+    public Flowable<Account> findByCustomerIdAndType(String customerId, String type) {
+        return Flowable.fromPublisher(repository.findByCustomerIdAndType(customerId, type).map(mapper::toDomain));
     }
 
     @Override
-    public Flux<Account> findAll() {
-        return repository.findAll().map(this::toDomain);
-    }
-
-
-    @Override
-    public Mono<Void> deleteById(String id) {
-        return repository.deleteById(id);
-    }
-
-    private AccountDocument toDocument(Account a) {
-        AccountDocument d = new AccountDocument();
-        d.setId(a.id());
-        d.setCustomerId(a.customerId());
-        d.setCustomerType(a.customerType());
-        d.setNumber(a.number());
-        d.setType(a.type());
-        d.setBalance(a.balance());
-        d.setCurrency(a.currency());
-        d.setCreatedAt(a.createdAt());
-        d.setActive(a.active());
-        d.setStatus(a.status());
-        return d;
-    }
-
-    private Account toDomain(AccountDocument d) {
-        return new Account(
-                d.getId(),
-                d.getCustomerId(),
-                d.getCustomerType(),
-                d.getNumber(),
-                d.getType(),
-                d.getBalance(),
-                d.getCurrency(),
-                d.getCreatedAt(),
-                d.isActive(),
-                d.getStatus()
+    public Single<Boolean> existsById(String id) {
+        return Single.fromPublisher(
+                repository.existsById(id)
         );
     }
+
+
+    @Override
+    public Flowable<Account> findAll() {
+        return Flowable.fromPublisher(repository.findAll().map(mapper::toDomain));
+    }
+
+
+    @Override
+    public Completable deleteById(String id) {
+        return Completable.fromPublisher(repository.deleteById(id));
+    }
+
+
 }

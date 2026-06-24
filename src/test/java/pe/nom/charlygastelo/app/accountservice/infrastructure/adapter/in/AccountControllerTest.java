@@ -8,6 +8,7 @@ import pe.nom.charlygastelo.app.accountservice.domain.model.AccountType;
 import pe.nom.charlygastelo.app.accountservice.domain.model.CustomerType;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.CreateAccountRequest;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.UpdateAccountRequest;
+import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.mapper.AccountRestMapper;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -30,6 +31,7 @@ class AccountControllerTest {
     private final ListAccountsUseCase listAccountsUseCase = mock(ListAccountsUseCase.class);
     private final UpdateAccountUseCase updateAccountUseCase = mock(UpdateAccountUseCase.class);
     private final DeleteAccountUseCase deleteAccountUseCase = mock(DeleteAccountUseCase.class);
+    private final AccountRestMapper accountRestMapper = mock(AccountRestMapper.class);
 
     private final WebTestClient webTestClient = WebTestClient
             .bindToController(new AccountController(
@@ -37,7 +39,8 @@ class AccountControllerTest {
                     getAccountUseCase,
                     listAccountsUseCase,
                     updateAccountUseCase,
-                    deleteAccountUseCase
+                    deleteAccountUseCase,
+                    accountRestMapper
             ))
             .build();
 

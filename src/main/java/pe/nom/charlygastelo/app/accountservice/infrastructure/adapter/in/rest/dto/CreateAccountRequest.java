@@ -3,13 +3,10 @@ package pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.d
 import java.math.BigDecimal;
 
 import pe.nom.charlygastelo.app.accountservice.domain.model.AccountType;
-import pe.nom.charlygastelo.app.accountservice.domain.model.CustomerType;
 
 public record CreateAccountRequest (
         String customerId,
-        CustomerType customerType,
         String number,
-        AccountType type,
-        BigDecimal initialBalance,
+        String type,
         String currency
 ) { }

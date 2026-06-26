@@ -1,6 +1,6 @@
 package pe.nom.charlygastelo.app.accountservice.domain.exception;
 
-public class CustomerInactiveException extends RuntimeException{
+public class CustomerInactiveException extends RuntimeException {
     public CustomerInactiveException(String message) {
         super(message);
     }

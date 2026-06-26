@@ -1,6 +1,6 @@
 package pe.nom.charlygastelo.app.accountservice.domain.model;
 
-public record Customer (
+public record Customer(
         String id,
         String customerType,
         String documentType,
@@ -10,7 +10,7 @@ public record Customer (
         String email,
         String phone,
         boolean active
-){
+) {
     public boolean isBusiness() {
         return "BUSINESS".equals(customerType);
     }

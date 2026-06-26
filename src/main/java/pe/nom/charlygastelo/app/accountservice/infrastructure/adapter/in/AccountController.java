@@ -8,21 +8,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import pe.nom.charlygastelo.app.accountservice.application.usecase.CreateAccountUseCase;
-import pe.nom.charlygastelo.app.accountservice.application.usecase.DeleteAccountUseCase;
-import pe.nom.charlygastelo.app.accountservice.application.usecase.GetAccountUseCase;
-import pe.nom.charlygastelo.app.accountservice.application.usecase.ListAccountsUseCase;
-import pe.nom.charlygastelo.app.accountservice.application.usecase.UpdateAccountUseCase;
+import pe.nom.charlygastelo.app.accountservice.application.usecase.*;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.AccountResponse;
+import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.CloseAccountRequest;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.CreateAccountRequest;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.UpdateAccountRequest;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.mapper.AccountRestMapper;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping("/api/accounts")
+@RequestMapping("/accounts")
 @RequiredArgsConstructor
 public class AccountController {
 
@@ -31,6 +26,7 @@ public class AccountController {
     private final ListAccountsUseCase listAccountsUseCase;
     private final UpdateAccountUseCase updateAccountUseCase;
     private final DeleteAccountUseCase deleteAccountUseCase;
+    private final CloseAccountUseCase closeAccountUseCase;
     private final AccountRestMapper restMapper;
 
 
@@ -51,6 +47,16 @@ public class AccountController {
         Account account = restMapper.toDomain(request);
 
         return updateAccountUseCase.execute(id, account)
+                .map(updated -> ResponseEntity.ok(restMapper.toResponse(updated))).toSingle();
+    }
+
+    @PutMapping("/{id}/close")
+    public Single<ResponseEntity<AccountResponse>> close(@PathVariable String id,
+                                                          @RequestBody CloseAccountRequest request) {
+
+        Account account = restMapper.toDomain(request);
+
+        return closeAccountUseCase.execute(id, account)
                 .map(updated -> ResponseEntity.ok(restMapper.toResponse(updated))).toSingle();
     }
 
@@ -77,6 +83,5 @@ public class AccountController {
                 : listAccountsUseCase.byCustomer(customerId))
                 .map(restMapper::toResponse);
     }
-
 
 }

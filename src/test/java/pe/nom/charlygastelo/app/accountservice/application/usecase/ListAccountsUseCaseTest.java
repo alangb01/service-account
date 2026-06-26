@@ -1,12 +1,11 @@
 package pe.nom.charlygastelo.app.accountservice.application.usecase;
 
+import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.subscribers.TestSubscriber;
 import org.junit.jupiter.api.Test;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
 import pe.nom.charlygastelo.app.accountservice.domain.model.AccountType;
-import pe.nom.charlygastelo.app.accountservice.domain.model.CustomerType;
-import pe.nom.charlygastelo.app.accountservice.domain.port.AccountServicePort;
-import reactor.core.publisher.Flux;
-import reactor.test.StepVerifier;
+import pe.nom.charlygastelo.app.accountservice.domain.port.AccountRepositoryPort;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -17,20 +16,21 @@ import static org.mockito.Mockito.when;
 
 class ListAccountsUseCaseTest {
 
-    private final AccountServicePort accountServicePort = mock(AccountServicePort.class);
-    private final ListAccountsUseCase listAccountsUseCase = new ListAccountsUseCase(accountServicePort);
+    private final AccountRepositoryPort accountRepository = mock(AccountRepositoryPort.class);
+    private final ListAccountsUseCase listAccountsUseCase = new ListAccountsUseCase(accountRepository);
 
     @Test
     void allShouldReturnAllAccounts() {
         Account firstAccount = new Account(
                 "account-001",
                 "customer-001",
-                CustomerType.PERSONAL,
                 "ACC-001",
                 AccountType.SAVINGS,
                 BigDecimal.valueOf(100),
                 "PEN",
                 LocalDateTime.now(),
+                null,
+                null,
                 true,
                 "ACTIVE"
         );
@@ -38,34 +38,38 @@ class ListAccountsUseCaseTest {
         Account secondAccount = new Account(
                 "account-002",
                 "customer-002",
-                CustomerType.BUSINESS,
                 "ACC-002",
                 AccountType.CHECKING,
                 BigDecimal.valueOf(200),
                 "USD",
                 LocalDateTime.now(),
+                null,
+                null,
                 true,
                 "ACTIVE"
         );
 
-        when(accountServicePort.getAll()).thenReturn(Flux.just(firstAccount, secondAccount));
+        when(accountRepository.findAll()).thenReturn(Flowable.just(firstAccount, secondAccount));
 
-        StepVerifier.create(listAccountsUseCase.all())
-                .expectNext(firstAccount)
-                .expectNext(secondAccount)
-                .verifyComplete();
+        TestSubscriber<Account> subscriber = listAccountsUseCase.all().test();
 
-        verify(accountServicePort).getAll();
+        subscriber.assertComplete()
+                .assertNoErrors()
+                .assertValues(firstAccount, secondAccount);
+
+        verify(accountRepository).findAll();
     }
 
     @Test
     void allShouldReturnEmptyWhenThereAreNoAccounts() {
-        when(accountServicePort.getAll()).thenReturn(Flux.empty());
+        when(accountRepository.findAll()).thenReturn(Flowable.empty());
 
-        StepVerifier.create(listAccountsUseCase.all())
-                .verifyComplete();
+        TestSubscriber<Account> subscriber = listAccountsUseCase.all().test();
 
-        verify(accountServicePort).getAll();
+        subscriber.assertComplete()
+                .assertNoErrors();
+
+        verify(accountRepository).findAll();
     }
 
     @Test
@@ -75,12 +79,13 @@ class ListAccountsUseCaseTest {
         Account firstAccount = new Account(
                 "account-001",
                 customerId,
-                CustomerType.PERSONAL,
                 "ACC-001",
                 AccountType.SAVINGS,
                 BigDecimal.valueOf(100),
                 "PEN",
                 LocalDateTime.now(),
+                null,
+                null,
                 true,
                 "ACTIVE"
         );
@@ -88,35 +93,39 @@ class ListAccountsUseCaseTest {
         Account secondAccount = new Account(
                 "account-002",
                 customerId,
-                CustomerType.PERSONAL,
                 "ACC-002",
                 AccountType.FIXED_TERM,
                 BigDecimal.valueOf(300),
                 "USD",
                 LocalDateTime.now(),
+                null,
+                null,
                 true,
                 "ACTIVE"
         );
 
-        when(accountServicePort.getByCustomer(customerId)).thenReturn(Flux.just(firstAccount, secondAccount));
+        when(accountRepository.findByCustomerId(customerId)).thenReturn(Flowable.just(firstAccount, secondAccount));
 
-        StepVerifier.create(listAccountsUseCase.byCustomer(customerId))
-                .expectNext(firstAccount)
-                .expectNext(secondAccount)
-                .verifyComplete();
+        TestSubscriber<Account> subscriber = listAccountsUseCase.byCustomer(customerId).test();
 
-        verify(accountServicePort).getByCustomer(customerId);
+        subscriber.assertComplete()
+                .assertNoErrors()
+                .assertValues(firstAccount, secondAccount);
+
+        verify(accountRepository).findByCustomerId(customerId);
     }
 
     @Test
     void byCustomerShouldReturnEmptyWhenCustomerHasNoAccounts() {
         String customerId = "customer-999";
 
-        when(accountServicePort.getByCustomer(customerId)).thenReturn(Flux.empty());
+        when(accountRepository.findByCustomerId(customerId)).thenReturn(Flowable.empty());
 
-        StepVerifier.create(listAccountsUseCase.byCustomer(customerId))
-                .verifyComplete();
+        TestSubscriber<Account> subscriber = listAccountsUseCase.byCustomer(customerId).test();
 
-        verify(accountServicePort).getByCustomer(customerId);
+        subscriber.assertComplete()
+                .assertNoErrors();
+
+        verify(accountRepository).findByCustomerId(customerId);
     }
 }

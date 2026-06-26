@@ -37,7 +37,7 @@ public class CustomerClient implements CustomerClientPort {
 
         return Single.fromPublisher(
                         webClient.get()
-                                .uri("/api/customers/{id}", customerId)
+                                .uri("/customers/{id}", customerId)
                                 .retrieve()
                                 .bodyToMono(CustomerResponse.class)
                 )

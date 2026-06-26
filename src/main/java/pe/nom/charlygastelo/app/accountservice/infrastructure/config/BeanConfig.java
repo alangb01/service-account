@@ -10,15 +10,11 @@ import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import pe.nom.charlygastelo.app.accountservice.application.usecase.*;
-import pe.nom.charlygastelo.app.accountservice.domain.port.AccountCachePort;
-import pe.nom.charlygastelo.app.accountservice.domain.port.AccountEventProducerPort;
-import pe.nom.charlygastelo.app.accountservice.domain.port.AccountRepositoryPort;
-import pe.nom.charlygastelo.app.accountservice.domain.port.CustomerClientPort;
+import pe.nom.charlygastelo.app.accountservice.domain.port.*;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.mapper.AccountPersistentMapper;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.persistence.AccountRepositoryAdapter;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.persistence.ReactiveAccountRepository;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.cache.RedisAccountCacheAdapter;
-import pe.nom.charlygastelo.app.accountservice.infrastructure.events.AccountEventProducer;
 
 @Configuration
 public class    BeanConfig {
@@ -52,7 +48,7 @@ public class    BeanConfig {
     @Bean
     public CreateAccountUseCase createAccountUseCase(AccountRepositoryPort servicePort,
                                                      AccountEventProducerPort eventPublisher,
-                                                     CustomerClientPort customerClient
+                                                     CustomerEventPort customerClient
                                                      ) {
         return new CreateAccountUseCase(servicePort, eventPublisher,customerClient);
     }
@@ -69,12 +65,17 @@ public class    BeanConfig {
 
 
     @Bean
-    public UpdateAccountUseCase updateAccountUseCase(AccountRepositoryPort repositoryPort) {
-        return new UpdateAccountUseCase(repositoryPort);
+    public UpdateAccountUseCase updateAccountUseCase(AccountRepositoryPort repositoryPort, AccountEventProducerPort producer) {
+        return new UpdateAccountUseCase(repositoryPort,producer);
     }
 
     @Bean
-    public DeleteAccountUseCase deleteAccountUseCase(AccountRepositoryPort repositoryPort, AccountCachePort cache) {
-        return new DeleteAccountUseCase(repositoryPort, cache);
+    public DeleteAccountUseCase deleteAccountUseCase(AccountRepositoryPort repositoryPort, AccountCachePort cache, AccountEventProducerPort producer) {
+        return new DeleteAccountUseCase(repositoryPort, producer, cache);
+    }
+
+    @Bean
+    public CloseAccountUseCase closeAccountUseCase(AccountRepositoryPort repositoryPort, AccountCachePort cache, AccountEventProducerPort producer) {
+        return new CloseAccountUseCase(repositoryPort, producer, cache);
     }
 }

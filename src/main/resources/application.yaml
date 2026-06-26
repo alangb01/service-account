@@ -5,20 +5,6 @@ spring:
   config:
     import: "configserver:http://localhost:8888"
 
-  data:
-    redis:
-      host: localhost
-      port: 16379
-      password:
-      database: 0
-
-      # Timeout moderno (Spring Boot 3)
-      connect-timeout: 2s
-
-  #      lettuce:
-  #        pool:
-  #          enabled: false
-  #          max-active: 8
-  #          max-idle: 8
-  #          min-idle: 0
-  #          max-wait: 2s
+topic:
+  customer-request: customer.request
+  customer-response: customer.response

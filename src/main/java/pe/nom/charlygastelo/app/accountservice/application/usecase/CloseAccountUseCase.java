@@ -6,20 +6,21 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import pe.nom.charlygastelo.app.accountservice.domain.exception.AccountNotFoundException;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
+import pe.nom.charlygastelo.app.accountservice.domain.port.AccountCachePort;
 import pe.nom.charlygastelo.app.accountservice.domain.port.AccountEventProducerPort;
 import pe.nom.charlygastelo.app.accountservice.domain.port.AccountRepositoryPort;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.exception.AccountRepositoryException;
-import reactor.core.publisher.Mono;
 
 /**
  * Caso de uso encargado de actualizar la información de una cuenta bancaria.
  */
 @RequiredArgsConstructor
 @Slf4j
-public class UpdateAccountUseCase {
+public class CloseAccountUseCase {
 
     private final AccountRepositoryPort accountRepository;
     private final AccountEventProducerPort producer;
+    private final AccountCachePort cache;
 
     /**
      * Actualiza una cuenta bancaria existente.
@@ -43,22 +44,22 @@ public class UpdateAccountUseCase {
                 // Actualizar campos
                 .map(existing -> {
                     Account updated = existing.updateWith(account);
-                    log.debug("Customer {} updated with new data", id);
+                    log.debug("Account {} updated with new data", id);
                     return updated;
                 })
                 // Guardar en Mongo
                 .flatMapMaybe(updated ->
                         accountRepository.save(updated)
                                 .doOnSuccess(saved ->
-                                        log.info("Customer {} updated successfully", id)
+                                        log.info("Account {} updated successfully", id)
                                 )
                                 .doOnError(e ->
                                         log.error("Error saving updated customer {}: {}", id, e.getMessage(), e)
                                 ).flatMap(saved ->
                                         // Publicar evento después de guardar
-                                        producer.publishAccountUpdated(saved)
+                                        producer.publishAccountClosed(saved)
                                                 .doOnComplete(() ->
-                                                        log.info("AccountUpdatedEvent published for {}", saved.id())
+                                                        log.info("AccountClosedEvent published for {}", saved.id())
                                                 )
                                                 .doOnError(e ->
                                                         log.error("Error publishing event for {}: {}", saved.id(), e.getMessage(), e)

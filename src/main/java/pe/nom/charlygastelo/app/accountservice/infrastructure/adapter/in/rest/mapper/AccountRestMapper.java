@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
 import pe.nom.charlygastelo.app.accountservice.domain.model.AccountType;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.AccountResponse;
+import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.CloseAccountRequest;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.CreateAccountRequest;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.UpdateAccountRequest;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.clients.dto.CustomerResponse;
@@ -49,6 +50,22 @@ public class AccountRestMapper {
         );
     }
 
+    public Account toDomain (CloseAccountRequest request){
+        return  new Account(
+                null,
+                request.customerId(),
+                null,
+               null,
+                null,
+                null,
+                null,
+                null,
+                LocalDateTime.ofInstant(Instant.parse(request.closedAt()), ZoneId.systemDefault()),
+                request.active(),
+                "CLOSED"
+        );
+    }
+
     public AccountResponse toResponse(Account a) {
         return new AccountResponse(
                 a.id(),
@@ -62,4 +79,5 @@ public class AccountRestMapper {
                 a.status()
         );
     }
+
 }

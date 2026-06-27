@@ -4,7 +4,3 @@ spring:
 
   config:
     import: "configserver:http://localhost:8888"
-
-topic:
-  customer-request: customer.request
-  customer-response: customer.response

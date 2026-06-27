@@ -5,8 +5,12 @@ import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
 import pe.nom.charlygastelo.app.customerservice.infrastructure.avro.events.AccountCreatedEvent;
 import pe.nom.charlygastelo.app.customerservice.infrastructure.avro.events.AccountUpdatedEvent;
 import pe.nom.charlygastelo.app.customerservice.infrastructure.avro.events.AccountClosedEvent;
+import pe.nom.charlygastelo.app.shared.avro.dto.AccountResponseEvent;
+import pe.nom.charlygastelo.app.shared.avro.dto.CustomerResponseEvent;
 
+import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.UUID;
 
 @Component
 public class AccountEventMapper {
@@ -28,6 +32,47 @@ public class AccountEventMapper {
         );
     }
 
+    public AccountResponseEvent toAccountResponseEvent(
+            Account account,
+            String correlationId) {
+
+        return AccountResponseEvent.newBuilder()
+                .setEventId(UUID.randomUUID().toString())
+                .setEventType("ACCOUNT_RESPONSE")
+                .setOccurredAt(Instant.now().toString())
+                .setVersion("1.0")
+                .setSource("account-service")
+                .setCorrelationId(correlationId)
+                .setFound(true)
+                .setAccountId(account.id())
+                .setCustomerId(account.customerId())
+                .setNumber(account.number())
+                .setType(account.type().name())
+                .setBalance(account.balance().doubleValue())
+                .setActive(account.active())
+                .build();
+    }
+
+    public AccountResponseEvent toAccountNotFoundEvent(
+            String accountId,
+            String correlationId) {
+
+        return AccountResponseEvent.newBuilder()
+                .setEventId(UUID.randomUUID().toString())
+                .setEventType("ACCOUNT_RESPONSE")
+                .setOccurredAt(Instant.now().toString())
+                .setVersion("1.0")
+                .setSource("account-service")
+                .setCorrelationId(correlationId)
+                .setFound(false)
+                .setAccountId(accountId)
+                .setCustomerId("")
+                .setNumber("")
+                .setType("")
+                .setBalance(0.0)
+                .setActive(false)
+                .build();
+    }
     public Object toAccountUpdatedEvent(Account account) {
         return new AccountCreatedEvent(
                 account.id(),

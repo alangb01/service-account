@@ -46,6 +46,12 @@ public class    BeanConfig {
     }
 
     @Bean
+    public ProcessTransactionUseCase processTransactionUseCase(AccountRepositoryPort accountRepositoryPort,
+                                                                MovementEventPort movementEventPort, TransactionEventPort transactionEventPort) {
+        return new ProcessTransactionUseCase(accountRepositoryPort, movementEventPort, transactionEventPort);
+    }
+
+    @Bean
     public CreateAccountUseCase createAccountUseCase(AccountRepositoryPort servicePort,
                                                      AccountEventProducerPort eventPublisher,
                                                      CustomerEventPort customerClient

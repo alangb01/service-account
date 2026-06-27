@@ -3,6 +3,7 @@ package pe.nom.charlygastelo.app.accountservice.infrastructure.events;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.core.SingleEmitter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import pe.nom.charlygastelo.app.accountservice.domain.exception.CustomerNotFoundException;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Customer;
@@ -17,13 +18,16 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class CustomerResponseRegistry {
 
+    @Value("${customer.response.timeout:30}")
+    private int timeout;
+
     private final Map<String, SingleEmitter<Customer>> pendingRequests =
             new ConcurrentHashMap<>();
 
     public Single<Customer> waitForResponse(String correlationId) {
         return Single.<Customer>create(emitter ->
                 pendingRequests.put(correlationId, emitter)
-        ).timeout(2, TimeUnit.SECONDS)
+        ).timeout(timeout, TimeUnit.SECONDS)
                 .doFinally(() -> pendingRequests.remove(correlationId));
     }
 

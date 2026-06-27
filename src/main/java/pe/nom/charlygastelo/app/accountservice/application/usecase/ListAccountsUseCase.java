@@ -16,7 +16,7 @@ public class ListAccountsUseCase {
 
 
     public Flowable<Account> all() {
-        log.info("Listing all customers");
+        log.info("Listing all accounts");
         return accountRepository.findAll()
                 .doOnSubscribe(s -> log.debug("Starting MongoDB findAll()"))
                 .doOnNext(c -> log.debug("Account loaded: {}", c.id()))
@@ -25,10 +25,11 @@ public class ListAccountsUseCase {
     }
 
     public Flowable<Account> byCustomer(String customerId) {
+        log.info("Listing all accounts by customer "+customerId);
         return accountRepository.findByCustomerId(customerId)
-                .doOnSubscribe(s -> log.debug("Starting MongoDB findAll()"))
-                .doOnNext(c -> log.debug("Account loaded: {}", c.id()))
-                .doOnComplete(() -> log.info("All accounts loaded successfully"))
+                .doOnSubscribe(s -> log.debug("Starting MongoDB findByCustomerId()"))
+                .doOnNext(c -> log.debug("Account by customer loaded: {}", c.id()))
+                .doOnComplete(() -> log.info("All accounts by customer  loaded successfully"))
                 .doOnError(e -> log.error("Error loading accounts: {}", e.getMessage(), e));
     }
 }

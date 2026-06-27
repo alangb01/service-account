@@ -17,7 +17,38 @@ public record Account(
         boolean active,
         String status
 ) {
-    public Account updateWith(Account account) {
-        return null;
+
+    // Actualiza solo los campos no nulos del otro Account
+    public Account updateWith(Account other) {
+        return new Account(
+                other.id != null ? other.id : this.id,
+                other.customerId != null ? other.customerId : this.customerId,
+                other.number != null ? other.number : this.number,
+                other.type != null ? other.type : this.type,
+                other.balance != null ? other.balance : this.balance,
+                other.currency != null ? other.currency : this.currency,
+                other.createdAt != null ? other.createdAt : this.createdAt,
+                other.updatedAt != null ? other.updatedAt : LocalDateTime.now(),
+                other.closedAt != null ? other.closedAt : this.closedAt,
+                other.active,
+                other.status != null ? other.status : this.status
+        );
+    }
+
+    // Crea una nueva instancia con balance actualizado
+    public Account withBalance(BigDecimal newBalance) {
+        return new Account(
+                id,
+                customerId,
+                number,
+                type,
+                newBalance,
+                currency,
+                createdAt,
+                LocalDateTime.now(), // updatedAt
+                closedAt,
+                active,
+                status
+        );
     }
 }

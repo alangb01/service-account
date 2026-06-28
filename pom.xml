@@ -21,6 +21,7 @@
         <springdoc.version>2.8.9</springdoc.version>
         <confluent.version>7.6.1</confluent.version>
         <avro.version>1.11.3</avro.version>
+        <project.deploy.directory>C:/micro/proyecto/SERVICIOS/core</project.deploy.directory>
     </properties>
 
     <repositories>
@@ -44,7 +45,11 @@
     </dependencyManagement>
 
     <dependencies>
-
+        <dependency>
+            <groupId>pe.nom.charlygastelo.app.shared</groupId>
+            <artifactId>shared-avro</artifactId>
+            <version>1.0.0</version>
+        </dependency>
         <!-- WebFlux -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -169,11 +174,11 @@
         </dependency>
 
         <!-- Avro -->
-        <dependency>
-            <groupId>org.apache.avro</groupId>
-            <artifactId>avro</artifactId>
-            <version>${avro.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.apache.avro</groupId>-->
+<!--            <artifactId>avro</artifactId>-->
+<!--            <version>${avro.version}</version>-->
+<!--        </dependency>-->
 
         <!-- Testing -->
         <dependency>
@@ -232,24 +237,31 @@
         </dependency>
     </dependencies>
 
+    <distributionManagement>
+        <repository>
+            <id>dummy</id>
+            <url>file:./dist</url>
+        </repository>
+    </distributionManagement>
+
     <build>
         <plugins>
             <!-- AVRO -->
-            <plugin>
-                <groupId>org.apache.avro</groupId>
-                <artifactId>avro-maven-plugin</artifactId>
-                <version>1.11.3</version>
-                <executions>
-                    <execution>
-                        <phase>generate-sources</phase>
-                        <goals><goal>schema</goal></goals>
-                        <configuration>
-                            <sourceDirectory>${project.basedir}/src/main/avro</sourceDirectory>
-                            <outputDirectory>${project.basedir}/target/generated-sources/avro</outputDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+<!--            <plugin>-->
+<!--                <groupId>org.apache.avro</groupId>-->
+<!--                <artifactId>avro-maven-plugin</artifactId>-->
+<!--                <version>1.11.3</version>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <phase>generate-sources</phase>-->
+<!--                        <goals><goal>schema</goal></goals>-->
+<!--                        <configuration>-->
+<!--                            <sourceDirectory>${project.basedir}/src/main/avro</sourceDirectory>-->
+<!--                            <outputDirectory>${project.basedir}/target/generated-sources/avro</outputDirectory>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
             <!-- Jacoco -->
             <plugin>
                 <groupId>org.jacoco</groupId>
@@ -272,6 +284,29 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
 
+            <!-- DEPLOY LOCALHOST -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-jar</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <mkdir dir="${project.deploy.directory}"/>
+                                <copy
+                                        file="${project.build.directory}/${project.artifactId}-${project.version}.jar"
+                                        todir="${project.deploy.directory}"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 

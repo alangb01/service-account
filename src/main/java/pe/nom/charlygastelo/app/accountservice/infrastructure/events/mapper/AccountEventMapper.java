@@ -1,16 +1,17 @@
 package pe.nom.charlygastelo.app.accountservice.infrastructure.events.mapper;
 
-import org.springframework.stereotype.Component;
-import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
-import pe.nom.charlygastelo.app.customerservice.infrastructure.avro.events.AccountCreatedEvent;
-import pe.nom.charlygastelo.app.customerservice.infrastructure.avro.events.AccountUpdatedEvent;
-import pe.nom.charlygastelo.app.customerservice.infrastructure.avro.events.AccountClosedEvent;
-import pe.nom.charlygastelo.app.shared.avro.dto.AccountResponseEvent;
-import pe.nom.charlygastelo.app.shared.avro.dto.CustomerResponseEvent;
-
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.UUID;
+
+import org.springframework.stereotype.Component;
+
+import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
+import pe.nom.charlygastelo.app.shared.avro.dto.AccountCreatedEvent;
+import pe.nom.charlygastelo.app.shared.avro.dto.AccountClosedEvent;
+import pe.nom.charlygastelo.app.shared.avro.dto.AccountResponseEvent;
+
+
 
 @Component
 public class AccountEventMapper {

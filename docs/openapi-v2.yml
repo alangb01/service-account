@@ -1,0 +1,67 @@
+openapi: 3.0.3
+info:
+  title: Account Service API
+  version: v2
+  description: Banking account management for Project II.
+
+paths:
+  /accounts:
+    post:
+      summary: Create account with business rules (VIP, PYME, minimum opening amount)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountCreateRequestV2'
+      responses:
+        '201':
+          description: Account created
+
+  /accounts/{id}/transfer:
+    post:
+      summary: Transfer money between accounts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+      responses:
+        '200':
+          description: Transfer completed
+
+  /accounts/{id}/report:
+    get:
+      summary: Get account report by date range
+      parameters:
+        - in: query
+          name: from
+          schema: { type: string, format: date }
+        - in: query
+          name: to
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Report generated
+
+components:
+  schemas:
+    AccountCreateRequestV2:
+      type: object
+      properties:
+        customerId: { type: string }
+        type: { $ref: '#/components/schemas/AccountType' }
+        openingAmount: { type: number }
+        profile: { $ref: '#/components/schemas/CustomerProfile' }
+
+    CustomerProfile:
+      type: string
+      enum: [STANDARD, VIP, PYME]
+
+    TransferRequest:
+      type: object
+      properties:
+        fromAccountId: { type: string }
+        toAccountId: { type: string }
+        amount: { type: number }

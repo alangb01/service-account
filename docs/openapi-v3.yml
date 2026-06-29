@@ -1,0 +1,33 @@
+openapi: 3.0.3
+info:
+  title: Account Service API
+  version: v3
+  description: Banking account management for Project III.
+
+paths:
+  /accounts/{id}/limits:
+    get:
+      summary: Get account limits (cached in Redis)
+      responses:
+        '200':
+          description: Limits retrieved
+
+  /accounts/{id}/debit-card/link:
+    post:
+      summary: Link a debit card to an account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DebitCardLinkRequest'
+      responses:
+        '200':
+          description: Debit card linked
+
+components:
+  schemas:
+    DebitCardLinkRequest:
+      type: object
+      properties:
+        debitCardId: { type: string }

@@ -1,0 +1,125 @@
+openapi: 3.0.3
+info:
+  title: Account Service API
+  version: v1
+  description: Banking account management for Project I.
+
+paths:
+  /accounts:
+    get:
+      summary: List all accounts
+      responses:
+        '200':
+          description: List of accounts
+    post:
+      summary: Create account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountCreateRequest'
+      responses:
+        '201':
+          description: Account created
+
+  /accounts/{id}:
+    get:
+      summary: Get account by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Account found
+    put:
+      summary: Update account
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Account updated
+    delete:
+      summary: Delete account
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Account deleted
+
+  /customers/{customerId}/accounts:
+    get:
+      summary: List accounts of a customer
+      parameters:
+        - in: path
+          name: customerId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Customer accounts
+
+  /accounts/{id}/balance:
+    get:
+      summary: Get account balance
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Balance retrieved
+
+  /accounts/{id}/movements:
+    get:
+      summary: Get account movements
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Movements retrieved
+
+components:
+  schemas:
+    Account:
+      type: object
+      properties:
+        id: { type: string }
+        customerId: { type: string }
+        type: { $ref: '#/components/schemas/AccountType' }
+        balance: { type: number }
+        status: { $ref: '#/components/schemas/AccountStatus' }
+
+    AccountCreateRequest:
+      type: object
+      required: [customerId, type]
+      properties:
+        customerId: { type: string }
+        type: { $ref: '#/components/schemas/AccountType' }
+        openingAmount: { type: number }
+
+    AccountType:
+      type: string
+      enum: [SAVINGS, CURRENT, FIXED_TERM]
+
+    AccountStatus:
+      type: string
+      enum: [ACTIVE, INACTIVE]

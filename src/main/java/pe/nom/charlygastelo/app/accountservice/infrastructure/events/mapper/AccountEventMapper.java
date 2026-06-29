@@ -25,10 +25,12 @@ public class AccountEventMapper {
                 .setSource("account-service")
                 .setAccountId(value(account.id()))
                 .setCustomerId(value(account.customerId()))
+                .setCustomerType(value(account.customerType()))
                 .setNumber(value(account.number()))
                 .setType(account.type().name())
                 .setBalance(account.balance().doubleValue())
-                .setStatus(status(account))
+                .setActive(true)
+                .setStatus(AccountStatus.ACTIVE.name())
                 .build();
     }
 
@@ -44,6 +46,7 @@ public class AccountEventMapper {
                 .setNumber(value(account.number()))
                 .setType(account.type().name())
                 .setBalance(account.balance().doubleValue())
+                .setActive(account.active())
                 .setStatus(status(account))
                 .build();
     }

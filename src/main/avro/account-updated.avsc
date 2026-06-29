@@ -40,11 +40,11 @@
       "type": "string"
     },
     {
-      "name": "accountNumber",
+      "name": "number",
       "type": "string"
     },
     {
-      "name": "accountType",
+      "name": "type",
       "type": "string"
     },
     {

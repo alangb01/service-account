@@ -50,6 +50,7 @@
       "name": "documentNumber",
       "type": "string"
     },
+    { "name": "profileType", "type": "string" },
     {
       "name": "name",
       "type": "string"

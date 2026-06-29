@@ -36,10 +36,6 @@
       "type": "string"
     },
     {
-      "name": "customerType",
-      "type": "string"
-    },
-    {
       "name": "number",
       "type": "string"
     },

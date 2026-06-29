@@ -1,6 +1,7 @@
 package pe.nom.charlygastelo.app.accountservice.infrastructure.events.mapper;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
@@ -29,8 +30,10 @@ public class AccountEventMapper {
                 .setNumber(value(account.number()))
                 .setType(account.type().name())
                 .setBalance(account.balance().doubleValue())
+                .setCurrency(account.currency())
                 .setActive(true)
                 .setStatus(AccountStatus.ACTIVE.name())
+                .setCreatedAt(LocalDateTime.now().toString())
                 .build();
     }
 
@@ -43,11 +46,14 @@ public class AccountEventMapper {
                 .setSource("account-service")
                 .setAccountId(value(account.id()))
                 .setCustomerId(value(account.customerId()))
+                .setCustomerType(value(account.customerType()))
                 .setNumber(value(account.number()))
                 .setType(account.type().name())
+                .setCurrency(account.currency())
                 .setBalance(account.balance().doubleValue())
                 .setActive(account.active())
                 .setStatus(status(account))
+                .setUpdatedAt(LocalDateTime.now().toString())
                 .build();
     }
 

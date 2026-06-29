@@ -5,6 +5,7 @@ public record Customer(
         String customerType,
         String documentType,
         String documentNumber,
+        String profileType,
         String name,
         String lastName,
         String email,
@@ -17,5 +18,13 @@ public record Customer(
 
     public boolean isPersonal() {
         return "PERSONAL".equals(customerType);
+    }
+
+    public boolean isVip() {
+        return "VIP".equals(profileType);
+    }
+
+    public boolean isPYME() {
+        return "PYME".equals(profileType);
     }
 }

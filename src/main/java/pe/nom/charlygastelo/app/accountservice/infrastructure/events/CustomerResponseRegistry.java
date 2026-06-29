@@ -65,6 +65,7 @@ public class CustomerResponseRegistry {
                 event.getCustomerType().toString(),
                 event.getDocumentType().toString(),
                 event.getDocumentNumber().toString(),
+                event.getProfileType().toString(),
                 event.getName().toString(),
                 event.getLastName().toString(),
                 event.getEmail().toString(),

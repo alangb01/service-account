@@ -13,6 +13,7 @@ public class CustomerClientMapper {
                response.customerType(),
                response.documentType(),
                response.documentNumber(),
+               response.profileType(),
                response.name(),
                response.fullName(),
                response.email(),

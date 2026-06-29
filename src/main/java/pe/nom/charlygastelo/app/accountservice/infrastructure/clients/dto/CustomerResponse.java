@@ -5,6 +5,7 @@ public record CustomerResponse (
     String customerType,
     String documentType,
     String documentNumber,
+    String profileType,
     String name,
     String fullName,
     String email,

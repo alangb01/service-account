@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 public record Account(
         String id,
         String customerId,
-        String customerType,
         String number,
         AccountType type,
         BigDecimal balance,
@@ -22,7 +21,6 @@ public record Account(
         return new Account(
                 id,
                 customerId,
-                customerType,
                 number,
                 type,
                 newBalance,
@@ -39,7 +37,6 @@ public record Account(
         return new Account(
                 id,
                 customerId,
-                customerType,
                 number,
                 account.type() == null ? type : account.type(),
                 account.balance() == null ? balance : account.balance(),
@@ -56,7 +53,6 @@ public record Account(
         return new Account(
                 id,
                 customerId,
-                customerType,
                 number,
                 type,
                 balance,

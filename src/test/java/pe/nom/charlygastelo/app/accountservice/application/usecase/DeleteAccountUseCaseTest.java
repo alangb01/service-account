@@ -51,7 +51,6 @@ class DeleteAccountUseCaseTest {
         return new Account(
                 "acc-1",
                 "cus-1",
-                "PERSONAL",
                 "001",
                 AccountType.SAVINGS,
                 BigDecimal.ZERO,

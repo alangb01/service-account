@@ -11,9 +11,6 @@ public record UpdateAccountRequest(
         String customerId,
 
         @NotBlank
-        String customerType,
-
-        @NotBlank
         String number,
 
         @NotNull
@@ -24,9 +21,6 @@ public record UpdateAccountRequest(
 
         @NotBlank
         String currency,
-
-        @NotBlank
-        String updatedAt,
 
         boolean active,
 

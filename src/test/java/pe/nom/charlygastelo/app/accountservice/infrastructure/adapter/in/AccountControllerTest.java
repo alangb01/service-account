@@ -43,7 +43,6 @@ class AccountControllerTest {
 
         CreateAccountRequest request = new CreateAccountRequest(
                 "cus-1",
-                "PERSONAL",
                 "001",
                 "SAVINGS",
                 "PEN"
@@ -115,7 +114,6 @@ class AccountControllerTest {
         return new Account(
                 "acc-1",
                 "cus-1",
-                "PERSONAL",
                 "001",
                 AccountType.SAVINGS,
                 BigDecimal.TEN,

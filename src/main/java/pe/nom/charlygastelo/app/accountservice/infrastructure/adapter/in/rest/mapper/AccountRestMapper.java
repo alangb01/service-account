@@ -22,13 +22,12 @@ public class AccountRestMapper {
         return new Account(
                 null,
                 request.customerId(),
-                request.customerType(),
                 request.number(),
                 AccountType.valueOf(request.type()),
                 BigDecimal.ZERO,
                 request.currency(),
                 LocalDateTime.now(),
-                LocalDateTime.now(),
+                null,
                 null,
                 true,
                 AccountStatus.ACTIVE
@@ -40,18 +39,12 @@ public class AccountRestMapper {
         return new Account(
                 null,
                 request.customerId(),
-                request.type(),
                 request.number(),
                 AccountType.valueOf(request.type()),
                 request.balance(),
                 request.currency(),
                 null,
-                request.updatedAt() == null
-                        ? null
-                        : LocalDateTime.ofInstant(
-                        Instant.parse(request.updatedAt()),
-                        ZoneId.systemDefault()
-                ),
+                LocalDateTime.now(),
                 null,
                 request.active(),
                 AccountStatus.valueOf(request.status())
@@ -63,7 +56,6 @@ public class AccountRestMapper {
         return new AccountResponse(
                 account.id(),
                 account.customerId(),
-                account.customerType(),
                 account.number(),
                 account.type().name(),
                 account.balance(),

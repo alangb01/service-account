@@ -160,6 +160,7 @@ class CreateAccountUseCaseTest {
                 "PERSONAL",
                 "DNI",
                 "12345678",
+                "REGULAR",
                 "Juan",
                 "Pérez",
                 "juan@example.com",
@@ -174,6 +175,7 @@ class CreateAccountUseCaseTest {
                 "BUSINESS",
                 "RUC",
                 "20123456789",
+                "REGULAR",
                 "Empresa SAC",
                 "Corporation",
                 "contacto@empresa.com",
@@ -185,9 +187,10 @@ class CreateAccountUseCaseTest {
     private Customer vipCustomer() {
         return new Customer(
                 "cus-1",
-                "VIP",
+                "PERSONAL",
                 "DNI",
                 "12345678",
+                "VIP",
                 "Juan",
                 "Pérez",
                 "vip@example.com",
@@ -199,9 +202,10 @@ class CreateAccountUseCaseTest {
     private Customer pymeCustomer() {
         return new Customer(
                 "cus-1",
-                "PYME",
+                "BUSINESS",
                 "RUC",
                 "20123456789",
+                "PYME",
                 "Empresa PYME",
                 "SAC",
                 "pyme@example.com",
@@ -214,7 +218,6 @@ class CreateAccountUseCaseTest {
         return new Account(
                 "acc-1",
                 "cus-1",
-                "PERSONAL",
                 "001",
                 AccountType.SAVINGS,
                 BigDecimal.TEN,

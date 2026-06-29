@@ -243,7 +243,6 @@ public class CreateAccountUseCase {
         return new Account(
                 account.id(),
                 account.customerId(),
-                account.customerType(),
                 account.number(),
                 account.type(),
                 account.balance(),

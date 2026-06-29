@@ -9,9 +9,6 @@ public record CreateAccountRequest(
         String customerId,
 
         @NotBlank
-        String customerType,
-
-        @NotBlank
         String number,
 
         @NotNull

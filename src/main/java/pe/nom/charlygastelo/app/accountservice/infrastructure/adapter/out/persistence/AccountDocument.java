@@ -23,8 +23,6 @@ public class AccountDocument {
 
     private String customerId;
 
-    private String customerType;
-
     @Indexed(unique = true)
     private String number;
 

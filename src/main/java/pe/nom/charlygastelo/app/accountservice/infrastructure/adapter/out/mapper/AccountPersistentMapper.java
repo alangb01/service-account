@@ -13,7 +13,6 @@ public class AccountPersistentMapper {
         return AccountDocument.builder()
                 .id(account.id())
                 .customerId(account.customerId())
-                .customerType(account.customerType())
                 .number(account.number())
                 .type(account.type() == null ? null : account.type().name())
                 .balance(account.balance())
@@ -30,7 +29,6 @@ public class AccountPersistentMapper {
         return new Account(
                 document.getId(),
                 document.getCustomerId(),
-                document.getCustomerType(),
                 document.getNumber(),
                 AccountType.valueOf(document.getType()),
                 document.getBalance(),

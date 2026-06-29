@@ -9,8 +9,6 @@ public record AccountResponse(
 
         String customerId,
 
-        String customerType,
-
         String number,
 
         String type,

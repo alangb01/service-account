@@ -64,7 +64,7 @@ class AccountRepositoryAdapterTest {
     private Account account() {
         return new Account(
                 "acc-1",
-                "cus-1",
+                "cus-1"
                 "001",
                 AccountType.SAVINGS,
                 BigDecimal.TEN,

@@ -1,0 +1,19 @@
+{
+  "type": "record",
+  "namespace": "pe.nom.charlygastelo.app.shared.avro.dto",
+  "name": "TransactionCompletedEvent",
+  "fields": [
+    { "name": "eventId", "type": "string" },
+    { "name": "eventType", "type": "string", "default": "TRANSACTION_COMPLETED" },
+    { "name": "occurredAt", "type": "string" },
+    { "name": "version", "type": "string", "default": "1.0" },
+    { "name": "source", "type": "string", "default": "account-service" },
+
+    { "name": "transactionId", "type": "string" },
+    { "name": "customerId", "type": "string" },
+
+    { "name": "status", "type": "string" },
+
+    { "name": "amount", "type": "double" }
+  ]
+}

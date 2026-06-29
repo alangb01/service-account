@@ -1,0 +1,30 @@
+{
+  "type": "record",
+  "namespace": "pe.nom.charlygastelo.app.shared.avro.dto",
+  "name": "MovementRegisterRequestEvent",
+  "fields": [
+    { "name": "eventId", "type": "string" },
+    { "name": "eventType", "type": "string", "default": "MOVEMENT_REGISTER_REQUEST" },
+    { "name": "occurredAt", "type": "string" },
+    { "name": "version", "type": "string", "default": "1.0" },
+    { "name": "source", "type": "string" },
+
+    { "name": "correlationId", "type": "string" },
+
+    { "name": "customerId", "type": "string" },
+
+    { "name": "productId", "type": "string" },
+
+    { "name": "productType", "type": "string" },
+
+    { "name": "movementType", "type": "string" },
+
+    { "name": "amount", "type": "double" },
+
+    { "name": "balanceAfter", "type": "double" },
+
+    { "name": "transactionId", "type": "string" },
+
+    { "name": "description", "type": "string" }
+  ]
+}

@@ -3,16 +3,31 @@ package pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.d
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import pe.nom.charlygastelo.app.accountservice.domain.model.AccountType;
+public record AccountResponse(
 
-public record AccountResponse (
         String id,
+
         String customerId,
+
+        String customerType,
+
         String number,
+
         String type,
+
         BigDecimal balance,
+
         String currency,
+
         LocalDateTime createdAt,
+
+        LocalDateTime updatedAt,
+
+        LocalDateTime closedAt,
+
         boolean active,
+
         String status
-) { }
+
+) {
+}

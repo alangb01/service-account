@@ -1,0 +1,20 @@
+{
+  "type": "record",
+  "namespace": "pe.nom.charlygastelo.app.shared.avro.dto",
+  "name": "MovementRegisterResponseEvent",
+  "fields": [
+    { "name": "eventId", "type": "string" },
+    { "name": "eventType", "type": "string", "default": "MOVEMENT_REGISTER_RESPONSE" },
+    { "name": "occurredAt", "type": "string" },
+    { "name": "version", "type": "string", "default": "1.0" },
+    { "name": "source", "type": "string", "default": "movement-service" },
+
+    { "name": "correlationId", "type": "string" },
+
+    { "name": "movementId", "type": "string" },
+
+    { "name": "success", "type": "boolean" },
+
+    { "name": "message", "type": "string" }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "type": "record",
+  "namespace": "pe.nom.charlygastelo.app.shared.avro.dto",
+  "name": "CustomerRequestEvent",
+  "fields": [
+    {
+      "name": "eventId",
+      "type": "string"
+    },
+    {
+      "name": "eventType",
+      "type": "string",
+      "default": "CUSTOMER_REQUEST"
+    },
+    {
+      "name": "occurredAt",
+      "type": "string"
+    },
+    {
+      "name": "version",
+      "type": "string",
+      "default": "1.0"
+    },
+    {
+      "name": "source",
+      "type": "string"
+    },
+    {
+      "name": "correlationId",
+      "type": "string"
+    },
+    {
+      "name": "customerId",
+      "type": "string"
+    }
+  ]
+}

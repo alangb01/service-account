@@ -8,9 +8,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.HttpClientErrorException;
 import pe.nom.charlygastelo.app.accountservice.domain.exception.*;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.ErrorResponse;
-import pe.nom.charlygastelo.app.accountservice.infrastructure.clients.exception.CustomerServiceUnavailableException;
-
-import javax.smartcardio.CardException;
+import pe.nom.charlygastelo.app.accountservice.domain.exception.CustomerServiceUnavailableException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {

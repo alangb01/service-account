@@ -30,7 +30,7 @@
     </root>
 
     <!-- Logger específico del microservicio -->
-    <logger name="com.bank.card_ops_producer" level="DEBUG" additivity="false">
+    <logger name="pe.nom.charlygastelo.app.accountservice" level="DEBUG" additivity="false">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="LOGSTASH"/>
     </logger>

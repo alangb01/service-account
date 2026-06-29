@@ -9,9 +9,6 @@ import pe.nom.charlygastelo.app.accountservice.domain.port.AccountCachePort;
 import pe.nom.charlygastelo.app.accountservice.domain.port.AccountEventProducerPort;
 import pe.nom.charlygastelo.app.accountservice.domain.port.AccountRepositoryPort;
 
-/**
- * Caso de uso encargado de desactivar una cuenta bancaria.
- */
 @RequiredArgsConstructor
 @Slf4j
 public class DeleteAccountUseCase {
@@ -20,46 +17,57 @@ public class DeleteAccountUseCase {
     private final AccountEventProducerPort producer;
     private final AccountCachePort cache;
 
-    /**
-     * Desactiva una cuenta bancaria mediante borrado lógico.
-     *
-     * @param id identificador de la cuenta.
-     * @return cuenta desactivada.
-     */
     public Completable execute(String id) {
-        log.info("Request received to delete customer {}", id);
+
+        log.info("[ACCOUNT-DELETE] Request received to delete account {}", id);
+
         return accountRepository.findById(id)
-                // Log si existe
-                .doOnSuccess(acc ->
-                        log.info("Account {} found in MongoDB", id)
+                .doOnComplete(() ->
+                        log.warn("[ACCOUNT-DELETE] Account not found. accountId={}", id)
                 )
-                // Si no existe → error de dominio
                 .switchIfEmpty(
                         Maybe.error(new AccountNotFoundException("Account not found: " + id))
                 )
-
-                // Convertimos Maybe<Account> → Single<Account>
                 .toSingle()
 
-                // Usamos el account, pero retornamos Completable
+                // Delete in Mongo
                 .flatMapCompletable(account ->
                         accountRepository.deleteById(id)
-                                .andThen(cache.delete(id))
                                 .doOnComplete(() ->
-                                        log.info("Account {} deleted from DB and cache", id)
+                                        log.info("[ACCOUNT-DELETE] Account deleted from MongoDB. accountId={}", id)
                                 )
-                                // Publicar evento usando el Account
+
+                                // Evict cache
+                                .andThen(cache.delete(id)
+                                        .doOnComplete(() ->
+                                                log.info("[ACCOUNT-DELETE] Account cache evicted. accountId={}", id)
+                                        )
+                                        .onErrorComplete(e -> {
+                                            log.warn("[ACCOUNT-DELETE] Cache eviction failed. accountId={}, reason={}",
+                                                    id, e.getMessage());
+                                            return true;
+                                        })
+                                )
+
+                                // Publish event
                                 .andThen(
-                                        producer.publishAccountDeleted(account)
+                                        producer.publishAccountDeleted(id)
                                                 .doOnComplete(() ->
-                                                        log.info("AccountDeletedEvent published for {}", account.id())
+                                                        log.info("[ACCOUNT-DELETE] AccountDeletedEvent published. accountId={}", id)
                                                 )
                                                 .doOnError(e ->
-                                                        log.error("Error publishing AccountDeletedEvent for {}: {}",
-                                                                account.id(), e.getMessage(), e)
+                                                        log.error("[ACCOUNT-DELETE] Error publishing AccountDeletedEvent. accountId={}, reason={}",
+                                                                id, e.getMessage(), e)
                                                 )
                                 )
-                );
+                )
 
+                .doOnComplete(() ->
+                        log.info("[ACCOUNT-DELETE] Account deletion process completed successfully. accountId={}", id)
+                )
+                .doOnError(error ->
+                        log.error("[ACCOUNT-DELETE] Error deleting account. accountId={}, reason={}",
+                                id, error.getMessage(), error)
+                );
     }
 }

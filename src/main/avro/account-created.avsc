@@ -1,0 +1,71 @@
+{
+  "type": "record",
+  "namespace": "pe.nom.charlygastelo.app.shared.avro.dto",
+  "name": "AccountCreatedEvent",
+  "fields": [
+    {
+      "name": "eventId",
+      "type": "string"
+    },
+    {
+      "name": "eventType",
+      "type": "string",
+      "default": "ACCOUNT_CREATED"
+    },
+    {
+      "name": "occurredAt",
+      "type": "string"
+    },
+    {
+      "name": "version",
+      "type": "string",
+      "default": "1.0"
+    },
+    {
+      "name": "source",
+      "type": "string",
+      "default": "account-service"
+    },
+
+    {
+      "name": "accountId",
+      "type": "string"
+    },
+    {
+      "name": "customerId",
+      "type": "string"
+    },
+    {
+      "name": "customerType",
+      "type": "string"
+    },
+    {
+      "name": "accountNumber",
+      "type": "string"
+    },
+    {
+      "name": "accountType",
+      "type": "string"
+    },
+    {
+      "name": "balance",
+      "type": "double"
+    },
+    {
+      "name": "currency",
+      "type": "string"
+    },
+    {
+      "name": "status",
+      "type": "string"
+    },
+    {
+      "name": "active",
+      "type": "boolean"
+    },
+    {
+      "name": "createdAt",
+      "type": "string"
+    }
+  ]
+}

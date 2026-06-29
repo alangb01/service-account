@@ -7,8 +7,6 @@ import pe.nom.charlygastelo.app.accountservice.domain.exception.AccountNotFoundE
 import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
 import pe.nom.charlygastelo.app.accountservice.domain.port.AccountCachePort;
 import pe.nom.charlygastelo.app.accountservice.domain.port.AccountRepositoryPort;
-import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.exception.AccountRepositoryException;
-import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -18,55 +16,80 @@ public class GetAccountUseCase {
     private final AccountCachePort cache;
 
     public Maybe<Account> byId(String id) {
-        log.info("Searching customer by ID {}", id);
+        log.info("Searching account by id={}", id);
+
         return cache.getById(id)
-                .doOnSuccess(c -> log.info("Customer {} found in cache", id))
-                .doOnComplete(() -> log.debug("Customer {} not found in cache", id))
-
+                .doOnSuccess(account ->
+                        log.info("Account found in cache. accountId={}", id))
+                .onErrorResumeNext(error -> {
+                    log.warn("Redis get by id failed. Falling back to MongoDB. accountId={}, reason={}",
+                            id, error.getMessage());
+                    return Maybe.empty();
+                })
                 .switchIfEmpty(
-                        accountRepository.findById(id)
-                                .doOnSuccess(c -> log.info("Customer {} found in MongoDB", id))
-                                .doOnError(e -> log.error("Error accessing MongoDB for {}", id, e))
-                                .flatMap(account ->
-                                        cache.save(account)
-                                                .doOnComplete(() -> log.debug("Customer {} cached", id))
-                                                .andThen(Maybe.just(account))
-                                )
+                        Maybe.defer(() ->
+                                accountRepository.findById(id)
+                                        .doOnSuccess(account ->
+                                                log.info("Account found in MongoDB. accountId={}", id))
+                                        .flatMap(account ->
+                                                cache.save(account)
+                                                        .onErrorComplete(cacheError -> {
+                                                            log.warn(
+                                                                    "Redis save failed. Continuing. accountId={}, reason={}",
+                                                                    account.id(),
+                                                                    cacheError.getMessage()
+                                                            );
+                                                            return true;
+                                                        })
+                                                        .andThen(Maybe.just(account))
+                                        )
+                        )
                 )
-
-                .switchIfEmpty(
-                        Maybe.error(new AccountNotFoundException("Customer not found: " + id))
-                );
+                .switchIfEmpty(Maybe.error(
+                        new AccountNotFoundException("Account not found: " + id)
+                ))
+                .doOnError(error ->
+                        log.error("Error searching account by id. accountId={}, reason={}",
+                                id, error.getMessage(), error));
     }
 
-    public Maybe<Account> byNumber(String type,String number) {
-        log.info("Searching customer by document {} {}", type, number);
+    public Maybe<Account> byNumber(String type, String number) {
+        log.info("Searching account by number. type={}, number={}", type, number);
 
         return cache.getByNumber(number)
-                .doOnSuccess(c -> log.info("Customer {}-{} found in cache", type, number))
-                .doOnComplete(() -> log.debug("Customer {}-{} not found in cache", type, number))
-
-                .switchIfEmpty(
-                        accountRepository.findByNumber(number)
-                                .doOnSuccess(c -> log.info("Customer {}-{} found in MongoDB", type, number))
-                                .doOnError(e -> log.error("Error accessing MongoDB for {}-{}", type, number, e))
-                                .flatMap(customer ->
-                                        cache.save(customer)
-                                                .doOnComplete(() -> log.debug("Customer {}-{} cached", type, number))
-                                                .andThen(Maybe.just(customer))
-                                )
-                )
-
-                .onErrorResumeNext(e -> {
-                    log.error("Technical error retrieving customer {}-{}: {}", type, number, e.getMessage(), e);
-                    return Maybe.error(new AccountRepositoryException("Error accessing Mongo", e));
+                .doOnSuccess(account ->
+                        log.info("Account found in cache. number={}", number))
+                .onErrorResumeNext(error -> {
+                    log.warn("Redis get by number failed. Falling back to MongoDB. number={}, reason={}",
+                            number, error.getMessage());
+                    return Maybe.empty();
                 })
-
                 .switchIfEmpty(
-                        Maybe.error(new AccountNotFoundException(
-                                "Customer not found with " + type + " " + number
-                        ))
-                );
+                        Maybe.defer(() ->
+                                accountRepository.findByNumber(number)
+                                        .doOnSuccess(account ->
+                                                log.info("Account found in MongoDB. number={}", number))
+                                        .flatMap(account ->
+                                                cache.save(account)
+                                                        .onErrorComplete(cacheError -> {
+                                                            log.warn(
+                                                                    "Redis save failed. Continuing. accountId={}, reason={}",
+                                                                    account.id(),
+                                                                    cacheError.getMessage()
+                                                            );
+                                                            return true;
+                                                        })
+                                                        .andThen(Maybe.just(account))
+                                        )
+                        )
+                )
+                .switchIfEmpty(Maybe.error(
+                        new AccountNotFoundException(
+                                "Account not found with " + type + " " + number
+                        )
+                ))
+                .doOnError(error ->
+                        log.error("Error searching account by number. number={}, reason={}",
+                                number, error.getMessage(), error));
     }
-
 }

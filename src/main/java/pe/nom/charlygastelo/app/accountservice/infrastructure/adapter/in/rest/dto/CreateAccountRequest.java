@@ -1,12 +1,24 @@
 package pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto;
 
-import java.math.BigDecimal;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
-import pe.nom.charlygastelo.app.accountservice.domain.model.AccountType;
+public record CreateAccountRequest(
 
-public record CreateAccountRequest (
+        @NotBlank
         String customerId,
+
+        @NotBlank
+        String customerType,
+
+        @NotBlank
         String number,
+
+        @NotNull
         String type,
+
+        @NotBlank
         String currency
-) { }
+
+) {
+}

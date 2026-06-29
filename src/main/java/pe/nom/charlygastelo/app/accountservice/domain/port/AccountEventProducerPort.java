@@ -8,5 +8,5 @@ public interface AccountEventProducerPort {
     Completable publishAccountCreated(Account account);
     Completable publishAccountUpdated(Account account);
     Completable publishAccountClosed(Account account);
-    Completable publishAccountDeleted(Account account);
+    Completable publishAccountDeleted(String accountid);
 }

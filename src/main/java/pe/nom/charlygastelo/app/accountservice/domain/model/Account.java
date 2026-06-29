@@ -3,10 +3,10 @@ package pe.nom.charlygastelo.app.accountservice.domain.model;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-
 public record Account(
         String id,
         String customerId,
+        String customerType,
         String number,
         AccountType type,
         BigDecimal balance,
@@ -15,40 +15,63 @@ public record Account(
         LocalDateTime updatedAt,
         LocalDateTime closedAt,
         boolean active,
-        String status
+        AccountStatus status
 ) {
 
-    // Actualiza solo los campos no nulos del otro Account
-    public Account updateWith(Account other) {
-        return new Account(
-                other.id != null ? other.id : this.id,
-                other.customerId != null ? other.customerId : this.customerId,
-                other.number != null ? other.number : this.number,
-                other.type != null ? other.type : this.type,
-                other.balance != null ? other.balance : this.balance,
-                other.currency != null ? other.currency : this.currency,
-                other.createdAt != null ? other.createdAt : this.createdAt,
-                other.updatedAt != null ? other.updatedAt : LocalDateTime.now(),
-                other.closedAt != null ? other.closedAt : this.closedAt,
-                other.active,
-                other.status != null ? other.status : this.status
-        );
-    }
-
-    // Crea una nueva instancia con balance actualizado
     public Account withBalance(BigDecimal newBalance) {
         return new Account(
                 id,
                 customerId,
+                customerType,
                 number,
                 type,
                 newBalance,
                 currency,
                 createdAt,
-                LocalDateTime.now(), // updatedAt
+                LocalDateTime.now(),
                 closedAt,
                 active,
                 status
         );
     }
+
+    public Account updateWith(Account account) {
+        return new Account(
+                id,
+                customerId,
+                customerType,
+                number,
+                account.type() == null ? type : account.type(),
+                account.balance() == null ? balance : account.balance(),
+                account.currency() == null ? currency : account.currency(),
+                createdAt,
+                LocalDateTime.now(),
+                closedAt,
+                active,
+                status
+        );
+    }
+
+    public Account close() {
+        return new Account(
+                id,
+                customerId,
+                customerType,
+                number,
+                type,
+                balance,
+                currency,
+                createdAt,
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                false,
+                AccountStatus.CLOSED
+        );
+    }
+
+    public boolean isActive() {
+        return active && status == AccountStatus.ACTIVE;
+    }
+
+
 }

@@ -1,4 +1,4 @@
-package pe.nom.charlygastelo.app.accountservice.infrastructure.events.exception;
+package pe.nom.charlygastelo.app.accountservice.domain.exception;
 
 public class AccountEventProducerException extends RuntimeException {
     public AccountEventProducerException(String message) {

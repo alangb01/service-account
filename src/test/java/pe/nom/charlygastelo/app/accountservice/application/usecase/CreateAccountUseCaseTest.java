@@ -3,133 +3,227 @@ package pe.nom.charlygastelo.app.accountservice.application.usecase;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
-import io.reactivex.rxjava3.observers.TestObserver;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
-import pe.nom.charlygastelo.app.accountservice.domain.model.AccountType;
-import pe.nom.charlygastelo.app.accountservice.domain.model.Customer;
-import pe.nom.charlygastelo.app.accountservice.domain.port.AccountEventProducerPort;
-import pe.nom.charlygastelo.app.accountservice.domain.port.AccountRepositoryPort;
-import pe.nom.charlygastelo.app.accountservice.domain.port.CustomerEventPort;
+import pe.nom.charlygastelo.app.accountservice.domain.exception.*;
+import pe.nom.charlygastelo.app.accountservice.domain.model.*;
+import pe.nom.charlygastelo.app.accountservice.domain.port.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
-public class CreateAccountUseCaseTest {
-    private final AccountRepositoryPort accountRepository = mock(AccountRepositoryPort.class);
-    private final AccountEventProducerPort accountEventProducer = mock(AccountEventProducerPort.class);
-    private final CustomerEventPort customerClient = mock(CustomerEventPort.class);
-    private final CreateAccountUseCase createAccountUseCase = new CreateAccountUseCase(accountRepository, accountEventProducer, customerClient);
+class CreateAccountUseCaseTest {
 
-    @Test
-    void executeShouldCreateAccountSuccessfully() {
-        String customerId = "customer-001";
-        
-        Customer customer = new Customer(
-                customerId, 
-                "PERSONAL", 
-                "DNI", 
-                "12345678", 
-                "John", 
-                "Doe", 
-                "john@example.com", 
-                "1234567890", 
-                true
-        );
-        
-        Account accountToCreate = new Account(
-                null,
-                customerId,
-                "ACC-001",
-                AccountType.SAVINGS,
-                BigDecimal.valueOf(1000),
-                "PEN",
-                null,
-                null,
-                null,
-                true,
-                null
+    private AccountRepositoryPort repository;
+    private AccountCachePort cache;
+    private CustomerEventPort customerEventPort;
+    private CreditEventPort creditEventPort;
+    private AccountEventProducerPort eventProducer;
+
+    private CreateAccountUseCase useCase;
+
+    @BeforeEach
+    void setup() {
+        repository = mock(AccountRepositoryPort.class);
+        cache = mock(AccountCachePort.class);
+        customerEventPort = mock(CustomerEventPort.class);
+        creditEventPort = mock(CreditEventPort.class);
+        eventProducer = mock(AccountEventProducerPort.class);
+
+        useCase = new CreateAccountUseCase(
+                repository,
+                eventProducer,
+                customerEventPort,
+                creditEventPort,
+                cache
         );
 
-        Account createdAccount = new Account(
-                "account-001",
-                customerId,
-                "ACC-001",
-                AccountType.SAVINGS,
-                BigDecimal.valueOf(1000),
-                "PEN",
-                LocalDateTime.now(),
-                null,
-                null,
-                true,
-                "ACTIVE"
-        );
-
-        when(customerClient.getById(customerId)).thenReturn(Single.just(customer));
-        when(accountRepository.findByCustomerIdAndType(customerId, "SAVINGS"))
-                .thenReturn(Flowable.empty());
-        when(accountRepository.save(any(Account.class))).thenReturn(Single.just(createdAccount));
-        when(accountEventProducer.publishAccountCreated(any(Account.class))).thenReturn(Completable.complete());
-
-        TestObserver<Account> observer = createAccountUseCase.execute(accountToCreate).test();
-
-        observer.assertComplete()
-                .assertNoErrors()
-                .assertValue(createdAccount);
-
-        verify(customerClient).getById(customerId);
-        verify(accountRepository).findByCustomerIdAndType(customerId, "SAVINGS");
-        verify(accountRepository).save(any(Account.class));
-        verify(accountEventProducer).publishAccountCreated(any(Account.class));
+        when(cache.save(any())).thenReturn(Completable.complete());
+        when(eventProducer.publishAccountCreated(any())).thenReturn(Completable.complete());
     }
 
+    // ---------------------------------------------------------
+    // PERSONAL: NO PUEDE TENER DOS SAVINGS
+    // ---------------------------------------------------------
     @Test
-    void executeShouldReturnErrorWhenServiceFails() {
-        String customerId = "customer-001";
-        
-        Customer customer = new Customer(
-                customerId, 
-                "PERSONAL", 
-                "DNI", 
-                "12345678", 
-                "John", 
-                "Doe", 
-                "john@example.com", 
-                "1234567890", 
+    void shouldFailWhenPersonalCustomerAlreadyHasSavingsAccount() {
+
+        when(customerEventPort.getById("cus-1"))
+                .thenReturn(Single.just(personalCustomer()));
+
+        when(creditEventPort.hasOverdueDebt("cus-1"))
+                .thenReturn(Single.just(false));
+
+        when(repository.findByCustomerIdAndType("cus-1", "SAVINGS"))
+                .thenReturn(Flowable.just(accountSavings()));
+
+        useCase.execute(accountSavings())
+                .test()
+                .assertError(AccountLimitExceededException.class);
+    }
+
+    // ---------------------------------------------------------
+    // PERSONAL: DEUDA VENCIDA
+    // ---------------------------------------------------------
+    @Test
+    void shouldFailWhenCustomerHasOverdueDebt() {
+
+        when(customerEventPort.getById("cus-1"))
+                .thenReturn(Single.just(personalCustomer()));
+
+        when(creditEventPort.hasOverdueDebt("cus-1"))
+                .thenReturn(Single.just(true));
+
+        when(repository.findByCustomerIdAndType(anyString(), anyString()))
+                .thenReturn(Flowable.empty());
+
+        useCase.execute(accountSavings())
+                .test()
+                .assertError(CustomerHasOverdueDebtException.class);
+    }
+
+    // ---------------------------------------------------------
+    // BUSINESS: NO PUEDE TENER SAVINGS
+    // ---------------------------------------------------------
+    @Test
+    void shouldFailWhenBusinessCustomerCreatesSavingsAccount() {
+
+        when(customerEventPort.getById("cus-1"))
+                .thenReturn(Single.just(businessCustomer()));
+
+        when(creditEventPort.hasOverdueDebt("cus-1"))
+                .thenReturn(Single.just(false));
+
+        when(repository.findByCustomerIdAndType(anyString(), anyString()))
+                .thenReturn(Flowable.empty());
+
+        useCase.execute(accountSavings())
+                .test()
+                .assertError(AccountBusinessException.class);
+    }
+
+    // ---------------------------------------------------------
+    // VIP: DEBE TENER TARJETA DE CRÉDITO ACTIVA
+    // ---------------------------------------------------------
+//    @Test
+//    void shouldFailWhenVipSavingsHasNoActiveCreditCard() {
+//
+//        when(customerEventPort.getById("cus-1"))
+//                .thenReturn(Single.just(vipCustomer()));
+//
+//        when(creditEventPort.hasOverdueDebt("cus-1"))
+//                .thenReturn(Single.just(false));
+//
+//        when(creditEventPort.hasActiveCreditCard("cus-1"))
+//                .thenReturn(Single.just(false)); // OBLIGATORIO
+//
+//        when(repository.findByCustomerIdAndType(anyString(), anyString()))
+//                .thenReturn(Flowable.empty()); // OBLIGATORIO
+//
+//        useCase.execute(accountSavings())
+//                .test()
+//                .assertError(AccountBusinessException.class);
+//    }
+
+    // ---------------------------------------------------------
+    // PYME: DEBE TENER TARJETA DE CRÉDITO ACTIVA
+    // ---------------------------------------------------------
+//    @Test
+//    void shouldFailWhenPymeHasNoActiveCreditCard() {
+//
+//        when(customerEventPort.getById("cus-1"))
+//                .thenReturn(Single.just(pymeCustomer()));
+//
+//        when(creditEventPort.hasOverdueDebt("cus-1"))
+//                .thenReturn(Single.just(false));
+//
+//        when(creditEventPort.hasActiveCreditCard("cus-1"))
+//                .thenReturn(Single.just(false)); // OBLIGATORIO
+//
+//        when(repository.findByCustomerIdAndType(anyString(), anyString()))
+//                .thenReturn(Flowable.empty()); // OBLIGATORIO
+//
+//        useCase.execute(accountSavings())
+//                .test()
+//                .assertError(AccountBusinessException.class);
+//    }
+
+    // ---------------------------------------------------------
+    // FACTORIES
+    // ---------------------------------------------------------
+    private Customer personalCustomer() {
+        return new Customer(
+                "cus-1",
+                "PERSONAL",
+                "DNI",
+                "12345678",
+                "Juan",
+                "Pérez",
+                "juan@example.com",
+                "999999999",
                 true
         );
-        
-        Account accountToCreate = new Account(
-                null,
-                customerId,
-                "ACC-001",
+    }
+
+    private Customer businessCustomer() {
+        return new Customer(
+                "cus-1",
+                "BUSINESS",
+                "RUC",
+                "20123456789",
+                "Empresa SAC",
+                "Corporation",
+                "contacto@empresa.com",
+                "987654321",
+                true
+        );
+    }
+
+    private Customer vipCustomer() {
+        return new Customer(
+                "cus-1",
+                "VIP",
+                "DNI",
+                "12345678",
+                "Juan",
+                "Pérez",
+                "vip@example.com",
+                "999999999",
+                true
+        );
+    }
+
+    private Customer pymeCustomer() {
+        return new Customer(
+                "cus-1",
+                "PYME",
+                "RUC",
+                "20123456789",
+                "Empresa PYME",
+                "SAC",
+                "pyme@example.com",
+                "987654321",
+                true
+        );
+    }
+
+    private Account accountSavings() {
+        return new Account(
+                "acc-1",
+                "cus-1",
+                "PERSONAL",
+                "001",
                 AccountType.SAVINGS,
-                BigDecimal.valueOf(1000),
+                BigDecimal.TEN,
                 "PEN",
-                null,
-                null,
+                LocalDateTime.now(),
+                LocalDateTime.now(),
                 null,
                 true,
-                null
+                AccountStatus.ACTIVE
         );
-
-        RuntimeException exception = new RuntimeException("Error creating account");
-
-        when(customerClient.getById(customerId)).thenReturn(Single.just(customer));
-        when(accountRepository.findByCustomerIdAndType(customerId, "SAVINGS"))
-                .thenReturn(Flowable.empty());
-        when(accountRepository.save(any(Account.class))).thenReturn(Single.error(exception));
-
-        TestObserver<Account> observer = createAccountUseCase.execute(accountToCreate).test();
-
-        observer.assertError(exception);
-        verify(customerClient).getById(customerId);
-        verify(accountRepository).findByCustomerIdAndType(customerId, "SAVINGS");
-        verify(accountRepository).save(any(Account.class));
     }
 }

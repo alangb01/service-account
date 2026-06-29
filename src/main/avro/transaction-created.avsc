@@ -1,0 +1,29 @@
+{
+  "type": "record",
+  "namespace": "pe.nom.charlygastelo.app.shared.avro.dto",
+  "name": "TransactionCreatedEvent",
+  "fields": [
+    { "name": "eventId", "type": "string" },
+    { "name": "eventType", "type": "string", "default": "TRANSACTION_CREATED" },
+    { "name": "occurredAt", "type": "string" },
+    { "name": "version", "type": "string", "default": "1.0" },
+    { "name": "source", "type": "string", "default": "transaction-service" },
+
+    { "name": "transactionId", "type": "string" },
+    { "name": "customerId", "type": "string" },
+
+    { "name": "sourceProductId", "type": "string" },
+    { "name": "targetProductId", "type": "string" },
+
+    { "name": "sourceProductType", "type": ["null", "string"], "default": null },
+    { "name": "targetProductType", "type": ["null", "string"], "default": null },
+
+    { "name": "transactionType", "type": "string" },
+    { "name": "status", "type": "string" },
+
+    { "name": "amount", "type": "double" },
+    { "name": "commission", "type": "double" },
+
+    { "name": "description", "type": "string" }
+  ]
+}

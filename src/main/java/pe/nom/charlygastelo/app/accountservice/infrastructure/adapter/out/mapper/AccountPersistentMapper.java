@@ -2,38 +2,44 @@ package pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.mappe
 
 import org.springframework.stereotype.Component;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
+import pe.nom.charlygastelo.app.accountservice.domain.model.AccountStatus;
 import pe.nom.charlygastelo.app.accountservice.domain.model.AccountType;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.persistence.AccountDocument;
 
 @Component
 public class AccountPersistentMapper {
-    public AccountDocument toDocument(Account a) {
-        AccountDocument d = new AccountDocument();
-        d.setId(a.id());
-        d.setCustomerId(a.customerId());
-        d.setNumber(a.number());
-        d.setType(a.type().toString());
-        d.setBalance(a.balance());
-        d.setCurrency(a.currency());
-        d.setCreatedAt(a.createdAt());
-        d.setActive(a.active());
-        d.setStatus(a.status());
-        return d;
+
+    public AccountDocument toDocument(Account account) {
+        return AccountDocument.builder()
+                .id(account.id())
+                .customerId(account.customerId())
+                .customerType(account.customerType())
+                .number(account.number())
+                .type(account.type() == null ? null : account.type().name())
+                .balance(account.balance())
+                .currency(account.currency())
+                .createdAt(account.createdAt())
+                .updatedAt(account.updatedAt())
+                .closedAt(account.closedAt())
+                .active(account.active())
+                .status(account.status() == null ? null : account.status().name())
+                .build();
     }
 
-    public Account toDomain(AccountDocument d) {
+    public Account toDomain(AccountDocument document) {
         return new Account(
-                d.getId(),
-                d.getCustomerId(),
-                d.getNumber(),
-                AccountType.valueOf(d.getType()),
-                d.getBalance(),
-                d.getCurrency(),
-                d.getCreatedAt(),
-                d.getUpdatedAt(),
-                d.getClosedAt(),
-                d.isActive(),
-                d.getStatus()
+                document.getId(),
+                document.getCustomerId(),
+                document.getCustomerType(),
+                document.getNumber(),
+                AccountType.valueOf(document.getType()),
+                document.getBalance(),
+                document.getCurrency(),
+                document.getCreatedAt(),
+                document.getUpdatedAt(),
+                document.getClosedAt(),
+                document.isActive(),
+                AccountStatus.valueOf(document.getStatus())
         );
     }
 }

@@ -42,4 +42,6 @@ public class CustomerKafkaClient implements CustomerEventPort {
                     producer.send(correlationId, event);
                 });
     }
+
+
 }

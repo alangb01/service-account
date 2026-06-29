@@ -1,131 +1,153 @@
 package pe.nom.charlygastelo.app.accountservice.application.usecase;
 
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.subscribers.TestSubscriber;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
+import pe.nom.charlygastelo.app.accountservice.domain.model.AccountStatus;
 import pe.nom.charlygastelo.app.accountservice.domain.model.AccountType;
+import pe.nom.charlygastelo.app.accountservice.domain.port.AccountCachePort;
 import pe.nom.charlygastelo.app.accountservice.domain.port.AccountRepositoryPort;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class ListAccountsUseCaseTest {
 
-    private final AccountRepositoryPort accountRepository = mock(AccountRepositoryPort.class);
-    private final ListAccountsUseCase listAccountsUseCase = new ListAccountsUseCase(accountRepository);
+    private AccountRepositoryPort repository;
+    private AccountCachePort cache;
+    private ListAccountsUseCase useCase;
 
+    @BeforeEach
+    void setup() {
+        repository = mock(AccountRepositoryPort.class);
+        cache = mock(AccountCachePort.class);
+        useCase = new ListAccountsUseCase(repository, cache);
+    }
+
+    // ---------------------------------------------------------
+    // TEST: LIST ALL ACCOUNTS
+    // ---------------------------------------------------------
     @Test
-    void allShouldReturnAllAccounts() {
-        Account firstAccount = new Account(
-                "account-001",
-                "customer-001",
-                "ACC-001",
+    void shouldListAllAccounts() {
+
+        when(repository.findAll())
+                .thenReturn(Flowable.just(account()));
+
+        when(cache.save(any(Account.class)))
+                .thenReturn(Completable.complete());
+
+        useCase.all()
+                .test()
+                .assertComplete()
+                .assertValueCount(1)
+                .assertValue(a -> a.id().equals("acc-1"));
+
+        verify(repository).findAll();
+        verify(cache).save(any(Account.class));
+    }
+
+    // ---------------------------------------------------------
+    // TEST: LIST ACCOUNTS BY CUSTOMER
+    // ---------------------------------------------------------
+    @Test
+    void shouldListAccountsByCustomer() {
+
+        when(repository.findByCustomerId("cus-1"))
+                .thenReturn(Flowable.just(account()));
+
+        when(cache.save(any(Account.class)))
+                .thenReturn(Completable.complete());
+
+        useCase.byCustomer("cus-1")
+                .test()
+                .assertComplete()
+                .assertValueCount(1)
+                .assertValue(a -> a.customerId().equals("cus-1"));
+
+        verify(repository).findByCustomerId("cus-1");
+        verify(cache).save(any(Account.class));
+    }
+
+    // ---------------------------------------------------------
+    // TEST: REDIS FAILURE SHOULD NOT BREAK FLOW
+    // ---------------------------------------------------------
+    @Test
+    void shouldContinueWhenRedisFails() {
+
+        when(repository.findAll())
+                .thenReturn(Flowable.just(account()));
+
+        when(cache.save(any(Account.class)))
+                .thenReturn(Completable.error(new RuntimeException("Redis down")));
+
+        useCase.all()
+                .test()
+                .assertComplete()
+                .assertValueCount(1);
+
+        verify(repository).findAll();
+        verify(cache).save(any(Account.class));
+    }
+
+    // ---------------------------------------------------------
+    // TEST: MULTIPLE ACCOUNTS
+    // ---------------------------------------------------------
+    @Test
+    void shouldListMultipleAccounts() {
+
+        when(repository.findAll())
+                .thenReturn(Flowable.just(account(), account2()));
+
+        when(cache.save(any(Account.class)))
+                .thenReturn(Completable.complete());
+
+        useCase.all()
+                .test()
+                .assertComplete()
+                .assertValueCount(2);
+
+        verify(repository).findAll();
+        verify(cache, times(2)).save(any(Account.class));
+    }
+
+    // ---------------------------------------------------------
+    // FACTORY METHODS
+    // ---------------------------------------------------------
+    private Account account() {
+        return new Account(
+                "acc-1",
+                "cus-1",
+                "PERSONAL",
+                "001",
                 AccountType.SAVINGS,
-                BigDecimal.valueOf(100),
+                BigDecimal.TEN,
                 "PEN",
                 LocalDateTime.now(),
-                null,
+                LocalDateTime.now(),
                 null,
                 true,
-                "ACTIVE"
+                AccountStatus.ACTIVE
         );
+    }
 
-        Account secondAccount = new Account(
-                "account-002",
-                "customer-002",
-                "ACC-002",
+    private Account account2() {
+        return new Account(
+                "acc-2",
+                "cus-1",
+                "PERSONAL",
+                "002",
                 AccountType.CHECKING,
-                BigDecimal.valueOf(200),
-                "USD",
-                LocalDateTime.now(),
-                null,
-                null,
-                true,
-                "ACTIVE"
-        );
-
-        when(accountRepository.findAll()).thenReturn(Flowable.just(firstAccount, secondAccount));
-
-        TestSubscriber<Account> subscriber = listAccountsUseCase.all().test();
-
-        subscriber.assertComplete()
-                .assertNoErrors()
-                .assertValues(firstAccount, secondAccount);
-
-        verify(accountRepository).findAll();
-    }
-
-    @Test
-    void allShouldReturnEmptyWhenThereAreNoAccounts() {
-        when(accountRepository.findAll()).thenReturn(Flowable.empty());
-
-        TestSubscriber<Account> subscriber = listAccountsUseCase.all().test();
-
-        subscriber.assertComplete()
-                .assertNoErrors();
-
-        verify(accountRepository).findAll();
-    }
-
-    @Test
-    void byCustomerShouldReturnAccountsForCustomer() {
-        String customerId = "customer-001";
-
-        Account firstAccount = new Account(
-                "account-001",
-                customerId,
-                "ACC-001",
-                AccountType.SAVINGS,
-                BigDecimal.valueOf(100),
+                BigDecimal.valueOf(500),
                 "PEN",
                 LocalDateTime.now(),
-                null,
-                null,
-                true,
-                "ACTIVE"
-        );
-
-        Account secondAccount = new Account(
-                "account-002",
-                customerId,
-                "ACC-002",
-                AccountType.FIXED_TERM,
-                BigDecimal.valueOf(300),
-                "USD",
                 LocalDateTime.now(),
                 null,
-                null,
                 true,
-                "ACTIVE"
+                AccountStatus.ACTIVE
         );
-
-        when(accountRepository.findByCustomerId(customerId)).thenReturn(Flowable.just(firstAccount, secondAccount));
-
-        TestSubscriber<Account> subscriber = listAccountsUseCase.byCustomer(customerId).test();
-
-        subscriber.assertComplete()
-                .assertNoErrors()
-                .assertValues(firstAccount, secondAccount);
-
-        verify(accountRepository).findByCustomerId(customerId);
-    }
-
-    @Test
-    void byCustomerShouldReturnEmptyWhenCustomerHasNoAccounts() {
-        String customerId = "customer-999";
-
-        when(accountRepository.findByCustomerId(customerId)).thenReturn(Flowable.empty());
-
-        TestSubscriber<Account> subscriber = listAccountsUseCase.byCustomer(customerId).test();
-
-        subscriber.assertComplete()
-                .assertNoErrors();
-
-        verify(accountRepository).findByCustomerId(customerId);
     }
 }

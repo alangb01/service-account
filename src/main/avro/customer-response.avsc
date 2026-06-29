@@ -1,0 +1,74 @@
+{
+  "type": "record",
+  "namespace": "pe.nom.charlygastelo.app.shared.avro.dto",
+  "name": "CustomerResponseEvent",
+  "fields": [
+    {
+      "name": "eventId",
+      "type": "string"
+    },
+    {
+      "name": "eventType",
+      "type": "string",
+      "default": "CUSTOMER_RESPONSE"
+    },
+    {
+      "name": "occurredAt",
+      "type": "string"
+    },
+    {
+      "name": "version",
+      "type": "string",
+      "default": "1.0"
+    },
+    {
+      "name": "source",
+      "type": "string",
+      "default": "customer-service"
+    },
+    {
+      "name": "correlationId",
+      "type": "string"
+    },
+    {
+      "name": "found",
+      "type": "boolean"
+    },
+    {
+      "name": "customerId",
+      "type": "string"
+    },
+    {
+      "name": "customerType",
+      "type": "string"
+    },
+    {
+      "name": "documentType",
+      "type": "string"
+    },
+    {
+      "name": "documentNumber",
+      "type": "string"
+    },
+    {
+      "name": "name",
+      "type": "string"
+    },
+    {
+      "name": "lastName",
+      "type": "string"
+    },
+    {
+      "name": "email",
+      "type": "string"
+    },
+    {
+      "name": "phone",
+      "type": "string"
+    },
+    {
+      "name": "active",
+      "type": "boolean"
+    }
+  ]
+}

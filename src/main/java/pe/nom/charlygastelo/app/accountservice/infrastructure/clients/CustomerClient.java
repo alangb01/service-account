@@ -13,9 +13,8 @@ import pe.nom.charlygastelo.app.accountservice.domain.exception.CustomerNotFound
 import pe.nom.charlygastelo.app.accountservice.domain.model.Customer;
 import pe.nom.charlygastelo.app.accountservice.domain.port.CustomerClientPort;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.clients.dto.CustomerResponse;
-import pe.nom.charlygastelo.app.accountservice.infrastructure.clients.exception.CustomerServiceUnavailableException;
+import pe.nom.charlygastelo.app.accountservice.domain.exception.CustomerServiceUnavailableException;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.clients.mapper.CustomerClientMapper;
-import reactor.core.publisher.Mono;
 
 @Component
 public class CustomerClient implements CustomerClientPort {

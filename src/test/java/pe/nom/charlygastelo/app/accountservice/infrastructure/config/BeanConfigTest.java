@@ -20,11 +20,12 @@ class BeanConfigTest {
         AccountEventProducerPort mockProducer=mock(AccountEventProducerPort.class);
         CustomerEventPort mockClient=mock(CustomerEventPort.class);
         AccountCachePort mockCache=mock(AccountCachePort.class);
+        CreditEventPort mockCredit = mock(CreditEventPort.class);
         // Test individual usecases with their dependencies mocked
-        assertThat(new CreateAccountUseCase(mockRepo, mockProducer, mockClient)).isNotNull();
+        assertThat(new CreateAccountUseCase(mockRepo, mockProducer, mockClient,mockCredit, mockCache)).isNotNull();
         assertThat(new GetAccountUseCase(mockRepo, mockCache)).isNotNull();
-        assertThat(new ListAccountsUseCase(mockRepo)).isNotNull(); // Corregido: eliminada coma extra
-        assertThat(new UpdateAccountUseCase(mockRepo,mockProducer)).isNotNull();
+        assertThat(new ListAccountsUseCase(mockRepo, mockCache)).isNotNull(); // Corregido: eliminada coma extra
+        assertThat(new UpdateAccountUseCase(mockRepo,mockProducer,mockCache)).isNotNull();
         assertThat(new DeleteAccountUseCase(mockRepo,mockProducer,mockCache)).isNotNull();
     }
 }

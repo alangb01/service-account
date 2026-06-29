@@ -1,4 +1,4 @@
-package pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.exception;
+package pe.nom.charlygastelo.app.accountservice.domain.exception;
 
 public class AccountRepositoryException extends RuntimeException {
     public AccountRepositoryException(String message) {

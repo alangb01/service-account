@@ -9,11 +9,7 @@ import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
 import pe.nom.charlygastelo.app.accountservice.domain.port.AccountCachePort;
 import pe.nom.charlygastelo.app.accountservice.domain.port.AccountEventProducerPort;
 import pe.nom.charlygastelo.app.accountservice.domain.port.AccountRepositoryPort;
-import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.exception.AccountRepositoryException;
 
-/**
- * Caso de uso encargado de actualizar la información de una cuenta bancaria.
- */
 @RequiredArgsConstructor
 @Slf4j
 public class CloseAccountUseCase {
@@ -22,78 +18,81 @@ public class CloseAccountUseCase {
     private final AccountEventProducerPort producer;
     private final AccountCachePort cache;
 
-    /**
-     * Actualiza una cuenta bancaria existente.
-     *
-     * @param id identificador de la cuenta.
-     * @param account información actualizada de la cuenta.
-     * @return cuenta actualizada.
-     */
-    public Maybe<Account> execute(String id, Account account) {
-        log.info("Starting update process for customer {}", id);
+    public Maybe<Account> execute(String id) {
+
+        log.info("[ACCOUNT-CLOSE] Closing account. accountId={}", id);
+
         return accountRepository.findById(id)
-                .doOnSuccess(existing ->
-                        log.debug("account {} found in MongoDB", id)
-                )
                 .doOnComplete(() ->
-                        log.warn("Account {} not found in MongoDB", id)
+                        log.warn("[ACCOUNT-CLOSE] Account not found. accountId={}", id)
                 )
                 .switchIfEmpty(
                         Single.error(new AccountNotFoundException("Account not found: " + id))
                 )
-                // Actualizar campos
+
+                // Close account
                 .map(existing -> {
-                    Account updated = existing.updateWith(account);
-                    log.debug("Account {} updated with new data", id);
-                    return updated;
+                    Account closed = existing.close();
+                    log.debug("[ACCOUNT-CLOSE] Account state changed to CLOSED. accountId={}", id);
+                    return closed;
                 })
-                // Guardar en Mongo
-                .flatMapMaybe(updated ->
-                        accountRepository.save(updated)
-                                .doOnSuccess(saved ->
-                                        log.info("Account {} updated successfully", id)
+
+                // Save in Mongo
+                .flatMap(accountRepository::save)
+                .doOnSuccess(saved ->
+                        log.info("[ACCOUNT-CLOSE] Account saved in MongoDB. accountId={}", saved.id())
+                )
+                .doOnError(e ->
+                        log.error("[ACCOUNT-CLOSE] Error saving account. accountId={}, reason={}",
+                                id, e.getMessage(), e)
+                )
+
+                // Update cache
+                .flatMap(saved ->
+                        cache.delete(id)
+                                .doOnComplete(() ->
+                                        log.debug("[ACCOUNT-CLOSE] Old cache evicted. accountId={}", id)
+                                )
+                                .onErrorComplete(e -> {
+                                    log.warn("[ACCOUNT-CLOSE] Cache eviction failed. accountId={}, reason={}",
+                                            id, e.getMessage());
+                                    return true;
+                                })
+                                .andThen(cache.save(saved)
+                                        .doOnComplete(() ->
+                                                log.info("[ACCOUNT-CLOSE] Account cached successfully. accountId={}", id)
+                                        )
+                                        .onErrorComplete(e -> {
+                                            log.warn("[ACCOUNT-CLOSE] Cache save failed. accountId={}, reason={}",
+                                                    id, e.getMessage());
+                                            return true;
+                                        })
+                                )
+                                .andThen(Single.just(saved))
+                )
+
+                // Publish event
+                .flatMap(saved ->
+                        producer.publishAccountClosed(saved)
+                                .doOnComplete(() ->
+                                        log.info("[ACCOUNT-CLOSE] AccountClosedEvent published. accountId={}", id)
                                 )
                                 .doOnError(e ->
-                                        log.error("Error saving updated customer {}: {}", id, e.getMessage(), e)
-                                ).flatMap(saved ->
-                                        // Publicar evento después de guardar
-                                        producer.publishAccountClosed(saved)
-                                                .doOnComplete(() ->
-                                                        log.info("AccountClosedEvent published for {}", saved.id())
-                                                )
-                                                .doOnError(e ->
-                                                        log.error("Error publishing event for {}: {}", saved.id(), e.getMessage(), e)
-                                                )
-                                                .andThen(Single.just(saved))
+                                        log.error("[ACCOUNT-CLOSE] Error publishing AccountClosedEvent. accountId={}, reason={}",
+                                                id, e.getMessage(), e)
                                 )
-                                .toMaybe()
+                                .andThen(Single.just(saved))
                 )
-                // Error técnico → envolver en excepción de infraestructura
-                .onErrorResumeNext(e -> {
-                    log.error("Technical error updating customer {}: {}", id, e.getMessage(), e);
-                    return Maybe.error(new AccountRepositoryException("Error updating customer", e));
-                });
 
+                .toMaybe()
+
+                // Final logs
+                .doOnSuccess(saved ->
+                        log.info("[ACCOUNT-CLOSE] Account closed successfully. accountId={}", saved.id())
+                )
+                .doOnError(error ->
+                        log.error("[ACCOUNT-CLOSE] Error closing account. accountId={}, reason={}",
+                                id, error.getMessage(), error)
+                );
     }
-
-//    private Mono<Void> validateAccountUpdate(Account existingAccount, Account updatedAccount) {
-//        if (updatedAccount.customerId() == null || updatedAccount.customerId().isBlank()) {
-//            return Mono.error(new IllegalArgumentException("Customer id is required"));
-//        }
-//
-//        if (updatedAccount.type() == null) {
-//            return Mono.error(new IllegalArgumentException("Account type is required"));
-//        }
-//
-//        if (!existingAccount.customerId().equals(updatedAccount.customerId())) {
-//            return Mono.error(new IllegalArgumentException("Customer id cannot be changed"));
-//        }
-//
-//        if (existingAccount.type() != updatedAccount.type()) {
-//            return Mono.error(new IllegalArgumentException("Account type cannot be changed"));
-//        }
-//
-//
-//        return Mono.empty();
-//    }
 }

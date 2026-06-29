@@ -1,5 +1,7 @@
 package pe.nom.charlygastelo.app.accountservice.infrastructure.events;
 
+import java.math.BigDecimal;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -9,18 +11,22 @@ import pe.nom.charlygastelo.app.accountservice.domain.model.Transaction;
 import pe.nom.charlygastelo.app.accountservice.domain.model.TransactionType;
 import pe.nom.charlygastelo.app.shared.avro.dto.TransactionCreatedEvent;
 
-import java.math.BigDecimal;
-
+@Slf4j
 @Component
 @RequiredArgsConstructor
-@Slf4j
 public class TransactionCreatedConsumer {
+
+    private static final String PRODUCT_TYPE_ACCOUNT = "ACCOUNT";
 
     private final AvroJsonDeserializer deserializer;
     private final ProcessTransactionUseCase useCase;
 
-    @KafkaListener(topics = "${topic.transaction-created}", groupId = "account-service")
+    @KafkaListener(
+            topics = "${topic.transaction-created}",
+            groupId = "account-service")
     public void consume(String message) {
+        log.debug("TransactionCreatedEvent raw message received");
+
         try {
             TransactionCreatedEvent event =
                     deserializer.deserialize(
@@ -29,25 +35,79 @@ public class TransactionCreatedConsumer {
                             TransactionCreatedEvent.getClassSchema()
                     );
 
-            Transaction tx = new Transaction(
-                    event.getTransactionId().toString(),
+            String transactionId = event.getTransactionId().toString();
+            String sourceProductType =
+                    event.getSourceProductType() == null
+                            ? null
+                            : event.getSourceProductType().toString();
+
+            String targetProductType =
+                    event.getTargetProductType() == null
+                            ? null
+                            : event.getTargetProductType().toString();
+
+
+            log.info(
+                    "TransactionCreatedEvent received. transactionId={}, type={}, sourceProductType={}, targetProductType={}",
+                    transactionId,
+                    event.getTransactionType(),
+                    sourceProductType,
+                    targetProductType
+            );
+
+            boolean supportedByAccountService =
+                    "DEPOSIT".equalsIgnoreCase(event.getTransactionType().toString())
+                            || "WITHDRAWAL".equalsIgnoreCase(event.getTransactionType().toString())
+                            || "TRANSFER".equalsIgnoreCase(event.getTransactionType().toString())
+                            || "DEBIT_CARD_PAYMENT".equalsIgnoreCase(event.getTransactionType().toString());
+
+            if (!supportedByAccountService) {
+                log.info("Transaction ignored by account-service. transactionId={}, type={}",
+                        transactionId, event.getTransactionType());
+                return;
+            }
+
+            String sourceProductId =
+                    event.getSourceProductId() == null
+                            ? null
+                            : event.getSourceProductId().toString();
+
+            String targetProductId =
+                    event.getTargetProductId() == null
+                            ? null
+                            : event.getTargetProductId().toString();
+
+            Transaction transaction = new Transaction(
+                    transactionId,
                     event.getCustomerId().toString(),
-                    event.getSourceProductId().toString(),
-                    event.getTargetProductId().toString(),
+                    sourceProductId,
+                    targetProductId,
                     TransactionType.valueOf(event.getTransactionType().toString()),
                     BigDecimal.valueOf(event.getAmount()),
                     BigDecimal.valueOf(event.getCommission()),
-                    event.getDescription().toString()
+                    event.getDescription() == null ? "" : event.getDescription().toString()
             );
 
-            useCase.execute(tx)
+            useCase.execute(transaction)
                     .subscribe(
-                            () -> log.info("Transaction processed by account-service"),
-                            error -> log.error("Error processing transaction", error)
+                            () -> log.info(
+                                    "Transaction processed successfully by account-service. transactionId={}",
+                                    transactionId
+                            ),
+                            error -> log.error(
+                                    "Error processing transaction in account-service. transactionId={}, reason={}",
+                                    transactionId,
+                                    error.getMessage(),
+                                    error
+                            )
                     );
 
         } catch (Exception e) {
-            log.error("Error consuming TransactionCreatedEvent", e);
+            log.error(
+                    "Error consuming TransactionCreatedEvent. reason={}",
+                    e.getMessage(),
+                    e
+            );
         }
     }
 }

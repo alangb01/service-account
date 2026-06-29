@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
 import pe.nom.charlygastelo.app.accountservice.domain.port.AccountCachePort;
-import pe.nom.charlygastelo.app.accountservice.infrastructure.cache.exception.AccountCacheException;
+import pe.nom.charlygastelo.app.accountservice.domain.exception.AccountCacheException;
 
 @RequiredArgsConstructor
 public class RedisAccountCacheAdapter implements AccountCachePort {

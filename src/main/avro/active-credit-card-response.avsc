@@ -1,0 +1,42 @@
+{
+  "type": "record",
+  "namespace": "pe.nom.charlygastelo.app.shared.avro.dto",
+  "name": "ActiveCreditCardResponseEvent",
+  "fields": [
+    {
+      "name": "eventId",
+      "type": "string"
+    },
+    {
+      "name": "eventType",
+      "type": "string",
+      "default": "ACTIVE_CREDIT_CARD_RESPONSE"
+    },
+    {
+      "name": "occurredAt",
+      "type": "string"
+    },
+    {
+      "name": "version",
+      "type": "string",
+      "default": "1.0"
+    },
+    {
+      "name": "source",
+      "type": "string",
+      "default": "credit-service"
+    },
+    {
+      "name": "correlationId",
+      "type": "string"
+    },
+    {
+      "name": "customerId",
+      "type": "string"
+    },
+    {
+      "name": "hasActiveCreditCard",
+      "type": "boolean"
+    }
+  ]
+}

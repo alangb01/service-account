@@ -2,15 +2,36 @@ package pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.d
 
 import java.math.BigDecimal;
 
-import pe.nom.charlygastelo.app.accountservice.domain.model.AccountType;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public record UpdateAccountRequest(
+
+        @NotBlank
         String customerId,
+
+        @NotBlank
+        String customerType,
+
+        @NotBlank
         String number,
+
+        @NotNull
         String type,
+
+        @NotNull
         BigDecimal balance,
+
+        @NotBlank
         String currency,
+
+        @NotBlank
         String updatedAt,
+
         boolean active,
+
+        @NotBlank
         String status
-) { }
+
+) {
+}

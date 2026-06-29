@@ -6,93 +6,93 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import pe.nom.charlygastelo.app.accountservice.domain.exception.AccountNotFoundException;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
+import pe.nom.charlygastelo.app.accountservice.domain.port.AccountCachePort;
 import pe.nom.charlygastelo.app.accountservice.domain.port.AccountEventProducerPort;
 import pe.nom.charlygastelo.app.accountservice.domain.port.AccountRepositoryPort;
-import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.exception.AccountRepositoryException;
-import reactor.core.publisher.Mono;
-
-/**
- * Caso de uso encargado de actualizar la información de una cuenta bancaria.
- */
 @RequiredArgsConstructor
 @Slf4j
 public class UpdateAccountUseCase {
 
     private final AccountRepositoryPort accountRepository;
     private final AccountEventProducerPort producer;
+    private final AccountCachePort cache;
 
-    /**
-     * Actualiza una cuenta bancaria existente.
-     *
-     * @param id identificador de la cuenta.
-     * @param account información actualizada de la cuenta.
-     * @return cuenta actualizada.
-     */
     public Maybe<Account> execute(String id, Account account) {
-        log.info("Starting update process for customer {}", id);
+
+        log.info("[ACCOUNT-UPDATE] Updating account {}", id);
+
         return accountRepository.findById(id)
-                .doOnSuccess(existing ->
-                        log.debug("account {} found in MongoDB", id)
-                )
                 .doOnComplete(() ->
-                        log.warn("Account {} not found in MongoDB", id)
+                        log.warn("[ACCOUNT-UPDATE] Account not found. accountId={}", id)
                 )
                 .switchIfEmpty(
                         Single.error(new AccountNotFoundException("Account not found: " + id))
                 )
-                // Actualizar campos
+
+                // Update fields
                 .map(existing -> {
                     Account updated = existing.updateWith(account);
-                    log.debug("Customer {} updated with new data", id);
+                    log.debug("[ACCOUNT-UPDATE] Account updated in memory. accountId={}", id);
                     return updated;
                 })
-                // Guardar en Mongo
-                .flatMapMaybe(updated ->
-                        accountRepository.save(updated)
-                                .doOnSuccess(saved ->
-                                        log.info("Customer {} updated successfully", id)
+
+                // Save in Mongo
+                .flatMap(accountRepository::save)
+                .doOnSuccess(saved ->
+                        log.info("[ACCOUNT-UPDATE] Account saved in MongoDB. accountId={}", saved.id())
+                )
+                .doOnError(e ->
+                        log.error("[ACCOUNT-UPDATE] Error saving account. accountId={}, reason={}",
+                                id, e.getMessage(), e)
+                )
+
+                // Update cache
+                .flatMap(saved ->
+                        cache.delete(id)
+                                .doOnComplete(() ->
+                                        log.debug("[ACCOUNT-UPDATE] Old cache evicted. accountId={}", id)
+                                )
+                                .onErrorComplete(e -> {
+                                    log.warn("[ACCOUNT-UPDATE] Cache eviction failed. accountId={}, reason={}",
+                                            id, e.getMessage());
+                                    return true;
+                                })
+                                .andThen(
+                                        cache.save(saved)
+                                                .doOnComplete(() ->
+                                                        log.info("[ACCOUNT-UPDATE] Account cached successfully. accountId={}", id)
+                                                )
+                                                .onErrorComplete(e -> {
+                                                    log.warn("[ACCOUNT-UPDATE] Cache save failed. accountId={}, reason={}",
+                                                            id, e.getMessage());
+                                                    return true;
+                                                })
+                                )
+                                .andThen(Single.just(saved))
+                )
+
+                // Publish event
+                .flatMap(saved ->
+                        producer.publishAccountUpdated(saved)
+                                .doOnComplete(() ->
+                                        log.info("[ACCOUNT-UPDATE] AccountUpdatedEvent published. accountId={}", id)
                                 )
                                 .doOnError(e ->
-                                        log.error("Error saving updated customer {}: {}", id, e.getMessage(), e)
-                                ).flatMap(saved ->
-                                        // Publicar evento después de guardar
-                                        producer.publishAccountUpdated(saved)
-                                                .doOnComplete(() ->
-                                                        log.info("AccountUpdatedEvent published for {}", saved.id())
-                                                )
-                                                .doOnError(e ->
-                                                        log.error("Error publishing event for {}: {}", saved.id(), e.getMessage(), e)
-                                                )
-                                                .andThen(Single.just(saved))
+                                        log.error("[ACCOUNT-UPDATE] Error publishing AccountUpdatedEvent. accountId={}, reason={}",
+                                                id, e.getMessage(), e)
                                 )
-                                .toMaybe()
+                                .andThen(Single.just(saved))
                 )
-                // Error técnico → envolver en excepción de infraestructura
-                .onErrorResumeNext(e -> {
-                    log.error("Technical error updating customer {}: {}", id, e.getMessage(), e);
-                    return Maybe.error(new AccountRepositoryException("Error updating customer", e));
-                });
 
+                .toMaybe()
+
+                // Final logs
+                .doOnSuccess(saved ->
+                        log.info("[ACCOUNT-UPDATE] Account updated successfully. accountId={}", saved.id())
+                )
+                .doOnError(error ->
+                        log.error("[ACCOUNT-UPDATE] Error updating account. accountId={}, reason={}",
+                                id, error.getMessage(), error)
+                );
     }
-
-//    private Mono<Void> validateAccountUpdate(Account existingAccount, Account updatedAccount) {
-//        if (updatedAccount.customerId() == null || updatedAccount.customerId().isBlank()) {
-//            return Mono.error(new IllegalArgumentException("Customer id is required"));
-//        }
-//
-//        if (updatedAccount.type() == null) {
-//            return Mono.error(new IllegalArgumentException("Account type is required"));
-//        }
-//
-//        if (!existingAccount.customerId().equals(updatedAccount.customerId())) {
-//            return Mono.error(new IllegalArgumentException("Customer id cannot be changed"));
-//        }
-//
-//        if (existingAccount.type() != updatedAccount.type()) {
-//            return Mono.error(new IllegalArgumentException("Account type cannot be changed"));
-//        }
-//
-//
-//        return Mono.empty();
-//    }
 }

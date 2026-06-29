@@ -1,8 +1,6 @@
 package pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.persistence;
 
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
-
-import pe.nom.charlygastelo.app.accountservice.domain.model.AccountType;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -13,5 +11,5 @@ public interface ReactiveAccountRepository
 
     Flux<AccountDocument> findByCustomerId(String customerId);
 
-    Flux<AccountDocument> findByCustomerIdAndType(String id, String type);
+    Flux<AccountDocument> findByCustomerIdAndType(String customerId, String type);
 }

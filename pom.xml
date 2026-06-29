@@ -45,11 +45,6 @@
     </dependencyManagement>
 
     <dependencies>
-        <dependency>
-            <groupId>pe.nom.charlygastelo.app.shared</groupId>
-            <artifactId>shared-avro</artifactId>
-            <version>1.0.0</version>
-        </dependency>
         <!-- WebFlux -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -174,11 +169,11 @@
         </dependency>
 
         <!-- Avro -->
-<!--        <dependency>-->
-<!--            <groupId>org.apache.avro</groupId>-->
-<!--            <artifactId>avro</artifactId>-->
-<!--            <version>${avro.version}</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+            <version>${avro.version}</version>
+        </dependency>
 
         <!-- Testing -->
         <dependency>
@@ -219,12 +214,6 @@
             <version>3.5.0</version>
         </dependency>
 
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
-        </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
@@ -246,22 +235,45 @@
 
     <build>
         <plugins>
-            <!-- AVRO -->
-<!--            <plugin>-->
-<!--                <groupId>org.apache.avro</groupId>-->
-<!--                <artifactId>avro-maven-plugin</artifactId>-->
-<!--                <version>1.11.3</version>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <phase>generate-sources</phase>-->
-<!--                        <goals><goal>schema</goal></goals>-->
-<!--                        <configuration>-->
-<!--                            <sourceDirectory>${project.basedir}/src/main/avro</sourceDirectory>-->
-<!--                            <outputDirectory>${project.basedir}/target/generated-sources/avro</outputDirectory>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
+            <!-- Avro generator -->
+            <plugin>
+                <groupId>org.apache.avro</groupId>
+                <artifactId>avro-maven-plugin</artifactId>
+                <version>${avro.version}</version>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>schema</goal>
+                        </goals>
+                        <configuration>
+                            <sourceDirectory>${project.basedir}/src/main/avro</sourceDirectory>
+                            <outputDirectory>${project.build.directory}/generated-sources/avro</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Add generated Avro sources -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <id>add-avro-sources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.build.directory}/generated-sources/avro</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- Jacoco -->
             <plugin>
                 <groupId>org.jacoco</groupId>
@@ -274,9 +286,20 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <version>3.3.1</version>
+<!--                <configuration>-->
+<!--                    <configLocation>checkstyle/spring-checkstyle.xml</configLocation>-->
+<!--                    <consoleOutput>true</consoleOutput>-->
+<!--                    <failsOnError>true</failsOnError>-->
+<!--                </configuration>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <phase>validate</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>check</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                </executions>-->
             </plugin>
-
-
 
             <!-- Spring Boot -->
             <plugin>

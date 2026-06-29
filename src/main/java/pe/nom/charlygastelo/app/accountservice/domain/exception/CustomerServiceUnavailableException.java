@@ -1,4 +1,4 @@
-package pe.nom.charlygastelo.app.accountservice.infrastructure.clients.exception;
+package pe.nom.charlygastelo.app.accountservice.domain.exception;
 
 public class CustomerServiceUnavailableException extends RuntimeException {
     public CustomerServiceUnavailableException(String message) {

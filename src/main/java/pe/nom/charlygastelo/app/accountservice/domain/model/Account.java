@@ -1,7 +1,7 @@
 package pe.nom.charlygastelo.app.accountservice.domain.model;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public record Account(
         String id,
@@ -10,9 +10,9 @@ public record Account(
         AccountType type,
         BigDecimal balance,
         String currency,
-        LocalDateTime createdAt,
-        LocalDateTime updatedAt,
-        LocalDateTime closedAt,
+        Instant createdAt,
+        Instant updatedAt,
+        Instant closedAt,
         boolean active,
         AccountStatus status
 ) {
@@ -26,7 +26,7 @@ public record Account(
                 newBalance,
                 currency,
                 createdAt,
-                LocalDateTime.now(),
+                Instant.now(),
                 closedAt,
                 active,
                 status
@@ -42,10 +42,26 @@ public record Account(
                 account.balance() == null ? balance : account.balance(),
                 account.currency() == null ? currency : account.currency(),
                 createdAt,
-                LocalDateTime.now(),
+                Instant.now(),
                 closedAt,
                 active,
                 status
+        );
+    }
+
+    public Account createWith(Account account) {
+        return new Account(
+                id,
+                customerId,
+                number,
+                account.type() == null ? type : account.type(),
+                BigDecimal.ZERO,
+                account.currency() == null ? currency : account.currency(),
+                Instant.now(),
+               null,
+                null,
+                true,
+                AccountStatus.ACTIVE
         );
     }
 
@@ -58,8 +74,8 @@ public record Account(
                 balance,
                 currency,
                 createdAt,
-                LocalDateTime.now(),
-                LocalDateTime.now(),
+                Instant.now(),
+                Instant.now(),
                 false,
                 AccountStatus.CLOSED
         );

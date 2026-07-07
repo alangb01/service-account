@@ -1,71 +1,16 @@
 package pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.mapper;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-
-import org.springframework.stereotype.Component;
-
+import org.mapstruct.Mapper;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
-import pe.nom.charlygastelo.app.accountservice.domain.model.AccountStatus;
-import pe.nom.charlygastelo.app.accountservice.domain.model.AccountType;
-import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.AccountResponse;
-import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.CreateAccountRequest;
-import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.UpdateAccountRequest;
+import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.request.AccountCreateRequest;
+import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.response.AccountResponse;
+import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.request.AccountUpdateRequest;
 
-@Component
-public class AccountRestMapper {
+@Mapper(componentModel = "spring")
+public interface AccountRestMapper {
+    AccountResponse toAccountResponse(Account account);
 
-    public Account toDomain(CreateAccountRequest request) {
+    Account toAccountDomain(AccountCreateRequest accountRequest);
 
-        return new Account(
-                null,
-                request.customerId(),
-                request.number(),
-                AccountType.valueOf(request.type()),
-                BigDecimal.ZERO,
-                request.currency(),
-                LocalDateTime.now(),
-                null,
-                null,
-                true,
-                AccountStatus.ACTIVE
-        );
-    }
-
-    public Account toDomain(UpdateAccountRequest request) {
-
-        return new Account(
-                null,
-                request.customerId(),
-                request.number(),
-                AccountType.valueOf(request.type()),
-                request.balance(),
-                request.currency(),
-                null,
-                LocalDateTime.now(),
-                null,
-                request.active(),
-                AccountStatus.valueOf(request.status())
-        );
-    }
-
-    public AccountResponse toResponse(Account account) {
-
-        return new AccountResponse(
-                account.id(),
-                account.customerId(),
-                account.number(),
-                account.type().name(),
-                account.balance(),
-                account.currency(),
-                account.createdAt(),
-                account.updatedAt(),
-                account.closedAt(),
-                account.active(),
-                account.status().name()
-        );
-    }
-
+    Account toAccountDomain(AccountUpdateRequest accountRequest);
 }

@@ -1,6 +1,7 @@
 package pe.nom.charlygastelo.app.accountservice.domain.model;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 
 public record Transaction(
         String id,
@@ -10,6 +11,7 @@ public record Transaction(
         TransactionType type,
         BigDecimal amount,
         BigDecimal commission,
-        String description
+        String description,
+        Instant timestamp
 ) {
 }

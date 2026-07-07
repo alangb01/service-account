@@ -2,22 +2,22 @@ package pe.nom.charlygastelo.app.accountservice.domain.model;
 
 public record Customer(
         String id,
-        String customerType,
-        String documentType,
+        CustomerType customerType,
+        DocumentType documentType,
         String documentNumber,
-        String profileType,
+        ProfileType profileType,
         String name,
         String lastName,
         String email,
         String phone,
-        boolean active
+        Boolean active
 ) {
     public boolean isBusiness() {
-        return "BUSINESS".equals(customerType);
+        return CustomerType.BUSINESS == customerType;
     }
 
     public boolean isPersonal() {
-        return "PERSONAL".equals(customerType);
+        return CustomerType.PERSONAL == customerType;
     }
 
     public boolean isVip() {

@@ -29,7 +29,7 @@
             <property name="option" value="top"/>
             <property name="groups" value="java,javax,org,com"/>
             <property name="ordered" value="true"/>
-            <property name="separated" value="true"/>
+<!--            <property name="separated" value="true"/>-->
         </module>
 
         <!-- Llaves -->
@@ -45,6 +45,7 @@
 
         <module name="RightCurly">
             <property name="option" value="alone"/>
+            <property name="tokens" value="LITERAL_IF, LITERAL_CATCH"/>
         </module>
 
         <!-- Espacios -->

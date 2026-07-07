@@ -1,0 +1,279 @@
+openapi: 3.0.3
+info:
+  title: Account Service API
+  version: v1
+  description: API for managing bank accounts and account rules
+
+servers:
+  - url: http://localhost:8082
+
+tags:
+  - name: Accounts
+    description: Account management operations
+
+security:
+  - bearerAuth: []
+
+paths:
+  /accounts:
+    get:
+      tags: [Accounts]
+      summary: Get all accounts
+      responses:
+        '200':
+          description: List of accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AccountResponse'
+
+    post:
+      tags: [Accounts]
+      summary: Create a new account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountCreateRequest'
+      responses:
+        '201':
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+
+  /accounts/{id}:
+    get:
+      tags: [Accounts]
+      summary: Get account by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Account found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+        '404':
+          description: Account not found
+
+    put:
+      tags: [Accounts]
+      summary: Update account
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountUpdateRequest'
+      responses:
+        '200':
+          description: Account updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+
+    delete:
+      tags: [Accounts]
+      summary: Delete account
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Account deleted
+
+#  /accounts/{id}/balance:
+#    get:
+#      tags: [Accounts]
+#      summary: Get account balance
+#      parameters:
+#        - name: id
+#          in: path
+#          required: true
+#          schema:
+#            type: string
+#      responses:
+#        '200':
+#          description: Account balance
+#          content:
+#            application/json:
+#              schema:
+#                $ref: '#/components/schemas/BalanceResponse'
+
+#  /accounts/{id}/holders:
+#    post:
+#      tags: [Accounts]
+#      summary: Add a holder to an account
+#      parameters:
+#        - name: id
+#          in: path
+#          required: true
+#          schema:
+#            type: string
+#      requestBody:
+#        required: true
+#        content:
+#          application/json:
+#            schema:
+#              $ref: '#/components/schemas/HolderRequest'
+#      responses:
+#        '200':
+#          description: Holder added
+#          content:
+#            application/json:
+#              schema:
+#                $ref: '#/components/schemas/AccountResponse'
+#
+#  /accounts/{id}/signers:
+#    post:
+#      tags: [Accounts]
+#      summary: Add an authorized signer to an account
+#      parameters:
+#        - name: id
+#          in: path
+#          required: true
+#          schema:
+#            type: string
+#      requestBody:
+#        required: true
+#        content:
+#          application/json:
+#            schema:
+#              $ref: '#/components/schemas/SignerRequest'
+#      responses:
+#        '200':
+#          description: Signer added
+#          content:
+#            application/json:
+#              schema:
+#                $ref: '#/components/schemas/AccountResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    AccountResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        customerId:
+          type: string
+        accountType:
+          type: string
+          enum:
+            - SAVINGS
+            - CHECKING
+            - FIXED_TERM
+            - VIP_SAVINGS
+            - PYME_CHECKING
+        balance:
+          type: number
+          format: double
+#        minimumOpeningAmount:
+#          type: number
+#          format: double
+#        maxFreeTransactions:
+#          type: integer
+#        maintenanceFee:
+#          type: number
+#          format: double
+
+#        holders:
+#          type: array
+#          items:
+#            $ref: '#/components/schemas/Holder'
+#        signers:
+#          type: array
+#          items:
+#            $ref: '#/components/schemas/Signer'
+        createdAt:
+          type: string
+          format: date-time
+
+    AccountCreateRequest:
+      type: object
+      required:
+        - customerId
+        - accountType
+      properties:
+        customerId:
+          type: string
+        accountType:
+          type: string
+        initialDeposit:
+          type: number
+          format: double
+
+    AccountUpdateRequest:
+      type: object
+      properties:
+        maintenanceFee:
+          type: number
+        maxFreeTransactions:
+          type: integer
+
+#    Holder:
+#      type: object
+#      properties:
+#        customerId:
+#          type: string
+#        fullName:
+#          type: string
+#
+#    HolderRequest:
+#      type: object
+#      required:
+#        - customerId
+#      properties:
+#        customerId:
+#          type: string
+#
+#    Signer:
+#      type: object
+#      properties:
+#        customerId:
+#          type: string
+#        fullName:
+#          type: string
+#
+#    SignerRequest:
+#      type: object
+#      required:
+#        - customerId
+#      properties:
+#        customerId:
+#          type: string
+#
+#    BalanceResponse:
+#      type: object
+#      properties:
+#        accountId:
+#          type: string
+#        balance:
+#          type: number
+#          format: double

@@ -1,4 +1,4 @@
-package pe.nom.charlygastelo.app.accountservice.application.usecase;
+package pe.nom.charlygastelo.app.accountservice.application.usecase.account;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Maybe;
@@ -10,7 +10,6 @@ import pe.nom.charlygastelo.app.accountservice.domain.exception.BusinessExceptio
 import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
 import pe.nom.charlygastelo.app.accountservice.domain.port.client.CustomerClientPort;
 import pe.nom.charlygastelo.app.accountservice.domain.port.repository.AccountRepositoryPort;
-import pe.nom.charlygastelo.app.accountservice.domain.port.usecase.CreateAccountUseCasePort;
 import pe.nom.charlygastelo.app.accountservice.domain.port.usecase.DeleteAccountUseCasePort;
 import pe.nom.charlygastelo.app.accountservice.domain.port.usecase.FindAccountUseCasePort;
 import pe.nom.charlygastelo.app.accountservice.domain.port.usecase.UpdateAccountUseCasePort;
@@ -20,7 +19,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AccountUseCaseService implements FindAccountUseCasePort, UpdateAccountUseCasePort, DeleteAccountUseCasePort, CreateAccountUseCasePort {
+public class AccountUseCaseService implements FindAccountUseCasePort, UpdateAccountUseCasePort, DeleteAccountUseCasePort {
 
     private final AccountRepositoryPort accountRepository;
     private final CustomerClientPort customerClient;
@@ -48,17 +47,7 @@ public class AccountUseCaseService implements FindAccountUseCasePort, UpdateAcco
     }
 
 
-    @Override
-    public Single<Account> create(Account account, String token ) {
-        log.info("[AccountUseCaseService] Creating account. customerId={}", account.customerId());
 
-        return customerClient.getById(account.customerId(), token)
-                .flatMap(customer ->{
-                    log.info("[AccountUseCaseService] creating account: customerId={}", account.customerId());
-                    Account newAccount= account.createWith(account);
-                    return accountRepository.save(newAccount);
-                });
-    }
 
     @Override
     public Completable delete(String id) {

@@ -1,4 +1,4 @@
-package pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.event;
+package pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.event.mapper;
 
 import org.springframework.stereotype.Component;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Account;

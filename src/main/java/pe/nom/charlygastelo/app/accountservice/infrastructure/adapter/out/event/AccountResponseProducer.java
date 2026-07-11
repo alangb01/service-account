@@ -2,10 +2,10 @@ package pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.event
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.specific.SpecificRecordBase;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
-import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.event.mapper.AvroJsonSerializer;
 import pe.nom.charlygastelo.app.shared.avro.dto.AccountResponseEvent;
 
 @Slf4j
@@ -13,8 +13,7 @@ import pe.nom.charlygastelo.app.shared.avro.dto.AccountResponseEvent;
 @RequiredArgsConstructor
 public class AccountResponseProducer {
 
-    private final KafkaTemplate<String, String> kafkaTemplate;
-    private final AvroJsonSerializer serializer;
+    private final KafkaTemplate<String, SpecificRecordBase> kafkaTemplate;
 
     @Value("${topic.account-response}")
     private String accountResponseTopic;
@@ -27,12 +26,11 @@ public class AccountResponseProducer {
             log.debug("[ACCOUNT-RESPONSE] Serializing AccountResponseEvent. correlationId={}, event={}",
                     correlationId, event);
 
-            String payload = serializer.serialize(event);
 
             log.debug("[ACCOUNT-RESPONSE] Payload serialized successfully. correlationId={}, payload={}",
-                    correlationId, payload);
+                    correlationId, event);
 
-            kafkaTemplate.send(accountResponseTopic, correlationId, payload)
+            kafkaTemplate.send(accountResponseTopic, correlationId, event)
                     .whenComplete((result, error) -> {
                         if (error != null) {
                             log.error("[ACCOUNT-RESPONSE] Error sending event. correlationId={}, reason={}",

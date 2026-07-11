@@ -1,4 +1,4 @@
-package pe.nom.charlygastelo.app.accountservice.application.usecase;
+package pe.nom.charlygastelo.app.accountservice.application.usecase.holder;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Maybe;
@@ -12,13 +12,9 @@ import pe.nom.charlygastelo.app.accountservice.domain.model.AccountHolder;
 import pe.nom.charlygastelo.app.accountservice.domain.model.HolderType;
 import pe.nom.charlygastelo.app.accountservice.domain.port.client.CustomerClientPort;
 import pe.nom.charlygastelo.app.accountservice.domain.port.repository.AccountHolderRepositoryPort;
-import pe.nom.charlygastelo.app.accountservice.domain.port.repository.AccountRepositoryPort;
 import pe.nom.charlygastelo.app.accountservice.domain.port.usecase.AddAccountHolderUseCasePort;
 import pe.nom.charlygastelo.app.accountservice.domain.port.usecase.RemoveAccountHolderUseCasePort;
 import pe.nom.charlygastelo.app.accountservice.domain.port.usecase.FindAccountHolderUseCasePort;
-import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.response.AccountHolderResponse;
-import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.mapper.AccountHolderRestMapper;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
 

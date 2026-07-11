@@ -3,6 +3,8 @@ package pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.d
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+import java.math.BigDecimal;
+
 public record AccountCreateRequest(
 
         @NotBlank
@@ -15,7 +17,10 @@ public record AccountCreateRequest(
         String type,
 
         @NotBlank
-        String currency
+        String currency,
+
+        @NotBlank
+        BigDecimal balance
 
 ) {
 }

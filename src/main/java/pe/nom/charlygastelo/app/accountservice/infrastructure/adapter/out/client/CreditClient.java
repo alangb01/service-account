@@ -12,44 +12,39 @@ import org.springframework.web.reactive.function.client.WebClientRequestExceptio
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import pe.nom.charlygastelo.app.accountservice.domain.exception.CustomerNotFoundException;
 import pe.nom.charlygastelo.app.accountservice.domain.exception.ServiceUnavailableException;
-import pe.nom.charlygastelo.app.accountservice.domain.model.Customer;
-import pe.nom.charlygastelo.app.accountservice.domain.port.client.CustomerClientPort;
-import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.client.dto.CustomerResponse;
-import pe.nom.charlygastelo.app.accountservice.domain.exception.CustomerServiceUnavailableException;
-import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.client.mapper.CustomerClientMapper;
+import pe.nom.charlygastelo.app.accountservice.domain.port.client.CreditClientPort;
+import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.client.dto.OverdueDebtResponse;
 
 @Component
-public class CustomerClient implements CustomerClientPort {
+public class CreditClient implements CreditClientPort {
     private final WebClient webClient;
-    private final CustomerClientMapper mapper;
 
-    public CustomerClient(WebClient.Builder builder,
-                         @Value("${client.customer-service.base-url}") String baseUrl,
-                          CustomerClientMapper clientMapper) {
+    public CreditClient(WebClient.Builder builder,
+                      @Value("${client.credit-service.base-url}") String baseUrl
+        ) {
         this.webClient = builder.baseUrl(baseUrl).build();
-        this.mapper = clientMapper;
     }
 
-    @CircuitBreaker(name = "customerservice", fallbackMethod = "fallbackAccount")
-    @TimeLimiter(name = "customerservice")
-    @Retry(name = "customerservice")
+    @CircuitBreaker(name = "creditservice", fallbackMethod = "fallbackHasOverdueDebt")
+    @TimeLimiter(name = "creditservice")
+    @Retry(name = "creditservice")
     @Override
-    public Single<Customer> getById(String customerId, String token) {
-
-        System.out.println("[CustomerClient] getById: customerId"+customerId);
+    public Single<Boolean> hasOverdueDebt(String customerId, String token) {
+        System.out.println("[CreditClient] getById: customerId"+customerId);
         return Single.fromPublisher(
-                webClient.get()
-                        .uri("/customers/{id}", customerId)
-                        .header(HttpHeaders.AUTHORIZATION, token)
-                        .retrieve()
-                        .bodyToMono(CustomerResponse.class)
+                        webClient.get()
+                                .uri("/customers/{customerId}/credits/overdue", customerId)
+                                .header(HttpHeaders.AUTHORIZATION, token)
+                                .retrieve()
+                                .bodyToMono(OverdueDebtResponse.class)
+
                 )
 
                 // 1. Convertir 404 → CustomerNotFoundException
                 .onErrorResumeNext(e -> {
                     if (e instanceof WebClientResponseException.NotFound) {
                         return Single.error(new CustomerNotFoundException(
-                                "Customer not found: " + customerId
+                                "Credit not found: " + customerId
                         ));
                     }
                     return Single.error(e);
@@ -59,17 +54,15 @@ public class CustomerClient implements CustomerClientPort {
                 .onErrorResumeNext(e -> {
                     if (e instanceof WebClientRequestException) {
                         return Single.error(new ServiceUnavailableException(
-                                "Customer service no disponible"
+                                "Credit service no disponible"
                         ));
                     }
                     return Single.error(e);
                 })
-
-                // 3. Mapear al dominio
-                .map(mapper::toCustomerDomain);
+                .map(OverdueDebtResponse::hasOverdueDebt);
     }
 
-    private Single<Customer> fallbackGetById(String customerId, Throwable throwable) {
-        return Single.error(new ServiceUnavailableException("Customer service no disponible"));
+    public Single<Boolean> fallbackHasOverdueDebt(String id, String token) {
+        return Single.error(new ServiceUnavailableException("Credit service no disponible"));
     }
 }

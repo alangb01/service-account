@@ -6,9 +6,11 @@ import java.time.Instant;
 public record Transaction(
         String id,
         String customerId,
+        String sourceProductType,
+        String targetProductType,
         String sourceProductId,
         String targetProductId,
-        TransactionType type,
+        String type,
         BigDecimal amount,
         BigDecimal commission,
         String description,

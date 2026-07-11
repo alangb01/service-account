@@ -51,12 +51,42 @@ public class AccountController extends BaseController {
         this.responseFactory = new ResponseFactory(this);
     }
 
+    @GetMapping("/{id}")
+    public Single<ResponseEntity> getById(
+            @PathVariable String id,
+            ServerHttpRequest request
+    ) {
+//        return responseFactory.fromMaybe(
+//                findAccountUseCase.findById(id),
+//                mapper::toAccountResponse,
+//                "ACCOUNT_NOT_FOUND",
+//                "Account " + id + " not found",
+//                request
+//        );
+        return findAccountUseCase.findById(id).toSingle().map(saved->
+                ResponseEntity
+                        .status(HttpStatus.CREATED)
+                        .body(mapper.toAccountResponse(saved))
+            );
+    }
+
+
+    @GetMapping
+    public Single<List<AccountResponse>> list() {
+        return findAccountUseCase.findAll().map(accounts ->
+                accounts.stream()
+                        .map(mapper::toAccountResponse)
+                        .toList()
+        );
+    }
+
     @PostMapping
     public Single<ResponseEntity<AccountResponse>> create(
             @RequestBody AccountCreateRequest request,
             ServerWebExchange exchange) {
 
         Account account = mapper.toAccountDomain(request);
+        System.out.println(account.balance()+""+request.balance());
         String token = exchange.getRequest().getHeaders().getFirst("Authorization");
         return createAccountUseCase.create(account, token)
                 .map(saved ->
@@ -85,27 +115,14 @@ public class AccountController extends BaseController {
         return deleteAccountUseCase.delete(id);
     }
 
-    @GetMapping("/{id}")
-    public Single<Object> getById(
+
+    @GetMapping("/{id}/balance")
+    public Single<ResponseEntity<AccountResponse>> balance(
             @PathVariable String id,
-            ServerHttpRequest request
-    ) {
-        return responseFactory.fromMaybe(
-                findAccountUseCase.findById(id),
-                mapper::toAccountResponse,
-                "ACCOUNT_NOT_FOUND",
-                "Account " + id + " not found",
-                request
-        );
-    }
+            @RequestBody AccountUpdateRequest request) {
 
+        Account account = mapper.toAccountDomain(request);
 
-    @GetMapping
-    public Single<List<AccountResponse>> list() {
-        return findAccountUseCase.findAll().map(accounts ->
-                accounts.stream()
-                        .map(mapper::toAccountResponse)
-                        .toList()
-        );
+        return Single.error(new RuntimeException("Not implemented"));
     }
 }

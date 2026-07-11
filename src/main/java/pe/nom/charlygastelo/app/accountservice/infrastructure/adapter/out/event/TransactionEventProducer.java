@@ -7,55 +7,32 @@ import org.apache.avro.specific.SpecificRecordBase;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
-import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
-import pe.nom.charlygastelo.app.accountservice.domain.port.AccountEventProducerPort;
-import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.event.mapper.AccountEventProducerMapper;
+import pe.nom.charlygastelo.app.accountservice.domain.model.Transaction;
+import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.event.mapper.TransactionEventOutMapper;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class AccountEventProducer implements AccountEventProducerPort {
+public class TransactionEventProducer {
 
     private final KafkaTemplate<String, SpecificRecordBase> kafkaTemplate;
-    private final AccountEventProducerMapper mapper;
+    private final TransactionEventOutMapper transactionMapper;
 
-    @Value("${topic.account-created}")
-    private String accountCreatedTopic;
+    @Value("${topic.transaction-completed}")
+    private String transactionCompletedTopic;
 
-    @Value("${topic.account-updated}")
-    private String accountUpdatedTopic;
+    @Value("${topic.transaction-failed}")
+    private String transactionFailedTopic;
 
-    @Value("${topic.account-deleted}")
-    private String accountDeletedTopic;
-
-    @Value("${topic.account-response}")
-    private String accountResponseTopic;
-
-    @Value("${topic.movement-initial-deposit-request}")
-    private String movementInitialDepositRequestTopic;
-
-    public Completable publishAccountCreated(Account account) {
-        return publish(accountCreatedTopic, account.id(), mapper.toAccountCreatedEvent(account));
+    public Completable publishTransactionCompleted(Transaction transaction) {
+        return publish(transactionCompletedTopic, transaction.id(), transactionMapper.toTransactionCompletedEvent(transaction));
     }
 
 
-    public Completable publishAccountUpdated(Account account) {
-        return publish(accountUpdatedTopic, account.id(), mapper.toAccountUpdatedEvent(account));
+    public Completable publishTransactionFailed(Transaction transaction, String reason) {
+        return publish(transactionFailedTopic, transaction.id(), transactionMapper.toTransactionFailedEvent(transaction, reason));
     }
 
-    @Override
-    public Completable publishAccountClosed(Account account) {
-        return null;
-    }
-
-    public Completable publishAccountDeleted(String accountId) {
-        return publish(accountDeletedTopic, accountId, mapper.toAccountDeletedEvent(accountId));
-    }
-
-    @Override
-    public Completable publishAccountInitialDeposit(Account saved) {
-        return publish(movementInitialDepositRequestTopic, saved.id(), mapper.toAccountInitialDeposit(saved));
-    }
 
 
     public Completable publish(String topic, String key, SpecificRecordBase event) {
@@ -67,6 +44,7 @@ public class AccountEventProducer implements AccountEventProducerPort {
 
                 log.debug("[ACCOUNT-EVENT] Serializing event. key={}, event={}",
                         key, event);
+
 
 
                 log.debug("[ACCOUNT-EVENT] Payload serialized successfully. key={}, payload={}",

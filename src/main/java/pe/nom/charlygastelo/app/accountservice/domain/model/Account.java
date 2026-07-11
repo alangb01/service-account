@@ -1,5 +1,8 @@
 package pe.nom.charlygastelo.app.accountservice.domain.model;
 
+import io.reactivex.rxjava3.core.Single;
+import pe.nom.charlygastelo.app.accountservice.domain.exception.BusinessException;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 
@@ -33,6 +36,23 @@ public record Account(
         );
     }
 
+    public Account withCreatedAt(Instant createdAt) {
+        return new Account(
+               id,
+                customerId,
+                number,
+                type,
+                balance,
+                currency,
+                createdAt,
+                updatedAt,
+                closedAt,
+                active,
+                status
+        );
+    }
+
+
     public Account updateWith(Account account) {
         return new Account(
                 id,
@@ -55,7 +75,7 @@ public record Account(
                 customerId,
                 number,
                 account.type() == null ? type : account.type(),
-                BigDecimal.ZERO,
+                account.balance() == null ? balance : account.balance(),
                 account.currency() == null ? currency : account.currency(),
                 Instant.now(),
                null,
@@ -86,4 +106,41 @@ public record Account(
     }
 
 
+    public boolean hasEnoughBalance(BigDecimal amount) {
+        if (amount == null || balance == null) {
+            return false;
+        }
+
+        // Monto mínimo permitido para retiros
+        if (amount.compareTo(new BigDecimal("0.01")) < 0) {
+            return false;
+        }
+
+        // Validación de saldo suficiente
+        return balance.compareTo(amount) >= 0;
+    }
+
+    public Account credit(BigDecimal amount) {
+        return updateAmount(balance.add(amount));
+    }
+
+    public Account debit(BigDecimal amount) {
+        return updateAmount(balance.subtract(amount));
+    }
+
+    private Account updateAmount(BigDecimal newAmount) {
+        return new Account(
+                id,
+                customerId,
+                number,
+                type,
+                newAmount,
+                currency,
+                createdAt,
+                Instant.now(),
+                closedAt,
+                active,
+                status
+        );
+    }
 }

@@ -3,15 +3,13 @@ package pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.event
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
-
 import org.springframework.stereotype.Component;
-
 import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
 import pe.nom.charlygastelo.app.accountservice.domain.model.AccountStatus;
 import pe.nom.charlygastelo.app.shared.avro.dto.AccountClosedEvent;
 import pe.nom.charlygastelo.app.shared.avro.dto.AccountCreatedEvent;
 import pe.nom.charlygastelo.app.shared.avro.dto.AccountDeletedEvent;
-import pe.nom.charlygastelo.app.shared.avro.dto.AccountResponseEvent;
+import pe.nom.charlygastelo.app.shared.avro.dto.AccountInitialDepositEvent;
 import pe.nom.charlygastelo.app.shared.avro.dto.AccountUpdatedEvent;
 
 @Component
@@ -79,47 +77,47 @@ public class AccountEventProducerMapper {
                 .build();
     }
 
-    public AccountResponseEvent toAccountResponseEvent(
-            Account account,
-            String correlationId) {
-
-        return AccountResponseEvent.newBuilder()
-                .setEventId(UUID.randomUUID().toString())
-                .setEventType("ACCOUNT_RESPONSE")
-                .setOccurredAt(Instant.now().toString())
-                .setVersion("1.0")
-                .setSource("account-service")
-                .setCorrelationId(value(correlationId))
-                .setFound(true)
-                .setAccountId(value(account.id()))
-                .setCustomerId(value(account.customerId()))
-                .setNumber(value(account.number()))
-                .setType(account.type().name())
-                .setBalance(account.balance().doubleValue())
-                .setActive(account.isActive())
-                .build();
-    }
-
-    public AccountResponseEvent toAccountNotFoundEvent(
-            String accountId,
-            String correlationId) {
-
-        return AccountResponseEvent.newBuilder()
-                .setEventId(UUID.randomUUID().toString())
-                .setEventType("ACCOUNT_RESPONSE")
-                .setOccurredAt(Instant.now().toString())
-                .setVersion("1.0")
-                .setSource("account-service")
-                .setCorrelationId(value(correlationId))
-                .setFound(false)
-                .setAccountId(value(accountId))
-                .setCustomerId("")
-                .setNumber("")
-                .setType("")
-                .setBalance(0.0)
-                .setActive(false)
-                .build();
-    }
+//    public AccountResponseEvent toAccountResponseEvent(
+//            Account account,
+//            String correlationId) {
+//
+//        return AccountResponseEvent.newBuilder()
+//                .setEventId(UUID.randomUUID().toString())
+//                .setEventType("ACCOUNT_RESPONSE")
+//                .setOccurredAt(Instant.now().toString())
+//                .setVersion("1.0")
+//                .setSource("account-service")
+//                .setCorrelationId(value(correlationId))
+//                .setFound(true)
+//                .setAccountId(value(account.id()))
+//                .setCustomerId(value(account.customerId()))
+//                .setNumber(value(account.number()))
+//                .setType(account.type().name())
+//                .setBalance(account.balance().doubleValue())
+//                .setActive(account.isActive())
+//                .build();
+//    }
+//
+//    public AccountResponseEvent toAccountNotFoundEvent(
+//            String accountId,
+//            String correlationId) {
+//
+//        return AccountResponseEvent.newBuilder()
+//                .setEventId(UUID.randomUUID().toString())
+//                .setEventType("ACCOUNT_RESPONSE")
+//                .setOccurredAt(Instant.now().toString())
+//                .setVersion("1.0")
+//                .setSource("account-service")
+//                .setCorrelationId(value(correlationId))
+//                .setFound(false)
+//                .setAccountId(value(accountId))
+//                .setCustomerId("")
+//                .setNumber("")
+//                .setType("")
+//                .setBalance(0.0)
+//                .setActive(false)
+//                .build();
+//    }
 
     private String status(Account account) {
         return account.status() == null
@@ -129,5 +127,20 @@ public class AccountEventProducerMapper {
 
     private String value(String value) {
         return value == null ? "" : value;
+    }
+
+    public AccountInitialDepositEvent toAccountInitialDeposit(Account account) {
+        return AccountInitialDepositEvent.newBuilder()
+                .setEventId(UUID.randomUUID().toString())
+                .setEventType("INITIAL_DEPOSIT")
+                .setOccurredAt(Instant.now().toString())
+                .setVersion("1.0")
+                .setSource("account-service")
+                .setAccountId(value(account.id()))
+                .setCustomerId(value(account.customerId()))
+                .setAmount(account.balance().doubleValue())
+                .setCurrency(account.currency())
+                .build();
+
     }
 }

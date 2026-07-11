@@ -1,13 +1,17 @@
 package pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.event;
 
-import io.reactivex.rxjava3.core.Completable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
+import pe.nom.charlygastelo.app.accountservice.application.usecase.transaction.ProcessCreatedTransactionUseCase;
+import pe.nom.charlygastelo.app.accountservice.domain.model.Transaction;
 import pe.nom.charlygastelo.app.accountservice.domain.port.usecase.FindAccountUseCasePort;
+import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.event.mapper.AccountEventConsumerMapper;
+import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.event.mapper.TransactionEventConsumerMapper;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.event.AccountResponseProducer;
 import pe.nom.charlygastelo.app.shared.avro.dto.AccountRequestEvent;
+import pe.nom.charlygastelo.app.shared.avro.dto.TransactionCreatedEvent;
 
 @Component
 @RequiredArgsConstructor
@@ -16,21 +20,16 @@ public class AccountEventConsumer {
 
     private final FindAccountUseCasePort findAccountAdapter;
     private final AccountResponseProducer responseProducer;
-    private final AvroJsonDeserializer deserializer;
-    private final AccountEventConsumerMapper mapper;
+    private final AccountEventConsumerMapper accountMapper;
 
     @KafkaListener(topics = "${topic.account-request}", groupId = "account-service")
-    public void consume(String message) {
+    public void consumeAccountRequest(AccountRequestEvent event) {
         log.info("[ACCOUNT-REQUEST] Message received from Kafka.");
 
         try {
-            log.debug("[ACCOUNT-REQUEST] Deserializing AccountRequestEvent. rawMessage={}", message);
+            log.debug("[ACCOUNT-REQUEST] Deserializing AccountRequestEvent. rawMessage={}", event.toString());
 
-            AccountRequestEvent event = deserializer.deserialize(
-                    message,
-                    AccountRequestEvent.class,
-                    AccountRequestEvent.getClassSchema()
-            );
+
 
             String correlationId = event.getCorrelationId().toString();
             String accountId = event.getAccountId().toString();
@@ -46,7 +45,7 @@ public class AccountEventConsumer {
 
                                 responseProducer.publish(
                                         correlationId,
-                                        mapper.toAccountResponseEvent(account, correlationId)
+                                        accountMapper.toAccountResponseEvent(account, correlationId)
                                 );
 
                                 log.info("[CUSTOMER-RESPONSE] AccountResponseEvent published. " +
@@ -60,7 +59,7 @@ public class AccountEventConsumer {
 
                                 responseProducer.publish(
                                         correlationId,
-                                        mapper.toAccountNotFoundEvent(accountId, correlationId)
+                                        accountMapper.toAccountNotFoundEvent(accountId, correlationId)
                                 );
 
                                 log.warn("[CUSTOMER-RESPONSE] AccountNotFoundEvent published due to error. " +
@@ -73,7 +72,7 @@ public class AccountEventConsumer {
 
                                 responseProducer.publish(
                                         correlationId,
-                                        mapper.toAccountNotFoundEvent(accountId, correlationId)
+                                        accountMapper.toAccountNotFoundEvent(accountId, correlationId)
                                 );
 
                                 log.info("[CUSTOMER-RESPONSE] AccountNotFoundEvent published. " +
@@ -87,18 +86,4 @@ public class AccountEventConsumer {
         }
     }
 
-    private void publish(
-            Completable completable,
-            String successMsg,
-            String errorMsg,
-            String correlationId,
-            String accountId
-    ) {
-        completable.subscribe(
-                () -> log.info("{} correlationId={}, accountId={}",
-                        successMsg, correlationId, accountId),
-                error -> log.error("{} correlationId={}, accountId={}, reason={}",
-                        errorMsg, correlationId, accountId, error.getMessage(), error)
-        );
-    }
 }

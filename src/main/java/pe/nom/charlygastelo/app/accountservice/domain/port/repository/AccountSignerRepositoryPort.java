@@ -1,6 +1,7 @@
 package pe.nom.charlygastelo.app.accountservice.domain.port.repository;
 
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Single;
 import pe.nom.charlygastelo.app.accountservice.domain.model.AccountSigner;
@@ -16,7 +17,7 @@ public interface AccountSignerRepositoryPort {
 
     Completable delete(String id);
 
-    Single<List<AccountSigner>> findByAccountId(String accountId);
+    Flowable<AccountSigner> findByAccountId(String accountId);
 
     Maybe<AccountSigner> findActiveSigner(String accountId, String customerId, SignerRole signerRole);
 }

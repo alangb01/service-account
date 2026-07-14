@@ -48,10 +48,11 @@ public class AccountSignerRepository implements AccountSignerRepositoryPort {
     }
 
     @Override
-    public Single<List<AccountSigner>> findByAccountId(String accountId){
+    public Flowable<AccountSigner> findByAccountId(String accountId){
+        log.debug("AccountSignerRepository.findByAccountId {}", accountId);
         return Flowable.fromPublisher(
                     reactiveRepository.findByAccountId(accountId).map(mapper::toDomain)
-            ).toList();
+            );
     }
 
     @Override

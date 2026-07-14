@@ -2,6 +2,7 @@ package pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.event.
 
 import org.springframework.stereotype.Component;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Transaction;
+import pe.nom.charlygastelo.app.accountservice.domain.model.TransactionType;
 import pe.nom.charlygastelo.app.shared.avro.dto.TransactionCreatedEvent;
 
 import java.math.BigDecimal;
@@ -16,9 +17,10 @@ public class TransactionEventConsumerMapper {
                 value(event.getTargetProductType()),
                 value(event.getSourceProductId()),
                 value(event.getTargetProductId()),
-                value(event.getTransactionType()),
+                TransactionType.valueOf(event.getTransactionType().toString()),
                 BigDecimal.valueOf(event.getAmount()),
                 BigDecimal.valueOf(event.getCommission()),
+
                 event.getDescription().toString(),
                 null
         );

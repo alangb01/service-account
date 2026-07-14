@@ -1,79 +1,60 @@
 package pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest;
 
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Single;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ServerWebExchange;
-import pe.nom.charlygastelo.app.accountservice.domain.port.usecase.CreateAccountUseCasePort;
-import pe.nom.charlygastelo.app.accountservice.domain.port.usecase.DeleteAccountUseCasePort;
-import pe.nom.charlygastelo.app.accountservice.domain.port.usecase.FindAccountUseCasePort;
-import pe.nom.charlygastelo.app.accountservice.domain.port.usecase.UpdateAccountUseCasePort;
+import pe.nom.charlygastelo.app.accountservice.domain.port.event.AccountLedgerEventProducerPort;
+import pe.nom.charlygastelo.app.accountservice.domain.port.event.AccountManagementEventProducerPort;
+import pe.nom.charlygastelo.app.accountservice.domain.port.usecase.*;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
+import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.response.AccountDetailedResponse;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.response.AccountResponse;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.request.AccountCreateRequest;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.request.AccountUpdateRequest;
-import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.response.ApiResponse;
-import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.dto.response.ResponseFactory;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.mapper.AccountRestMapper;
+import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.event.mapper.AccountLedgerEventProducerMapper;
+import pe.nom.charlygastelo.app.shared.avro.dto.AccountDepositOccurredEvent;
+import pe.nom.charlygastelo.app.shared.avro.dto.AccountInitialDepositEvent;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/accounts")
+@RequiredArgsConstructor
 @Slf4j
-public class AccountController extends BaseController {
+public class AccountController{
 
     private final CreateAccountUseCasePort createAccountUseCase;
-    private final FindAccountUseCasePort findAccountUseCase;
+    private final ListAccountUseCasePort listAccountUseCase;
+    private final GetAccountUseCasePort getAccountUseCase;
     private final UpdateAccountUseCasePort updateAccountUseCase;
     private final DeleteAccountUseCasePort deleteAccountUseCase;
+    private final AccountManagementEventProducerPort accountManagementEventProducer;
+    private final AccountLedgerEventProducerPort accountLedgerEventProducer;
+
     private final AccountRestMapper mapper;
-    private final ResponseFactory responseFactory;
-
-    public AccountController(
-            CreateAccountUseCasePort createAccountUseCase,
-            FindAccountUseCasePort findAccountUseCase,
-            UpdateAccountUseCasePort updateAccountUseCase,
-            DeleteAccountUseCasePort deleteAccountUseCase,
-            AccountRestMapper mapper
-    ) {
-        this.createAccountUseCase = createAccountUseCase;
-        this.findAccountUseCase = findAccountUseCase;
-        this.updateAccountUseCase = updateAccountUseCase;
-        this.deleteAccountUseCase = deleteAccountUseCase;
-        this.mapper = mapper;
-
-        this.responseFactory = new ResponseFactory(this);
-    }
+    private final AccountLedgerEventProducerMapper accountLedgerEventMapper;
 
     @GetMapping("/{id}")
-    public Single<ResponseEntity> getById(
-            @PathVariable String id,
-            ServerHttpRequest request
+    public Maybe<ResponseEntity<AccountDetailedResponse>> getById(
+            @PathVariable String id
     ) {
-//        return responseFactory.fromMaybe(
-//                findAccountUseCase.findById(id),
-//                mapper::toAccountResponse,
-//                "ACCOUNT_NOT_FOUND",
-//                "Account " + id + " not found",
-//                request
-//        );
-        return findAccountUseCase.findById(id).toSingle().map(saved->
-                ResponseEntity
-                        .status(HttpStatus.CREATED)
-                        .body(mapper.toAccountResponse(saved))
+        return getAccountUseCase.findById(id).map(saved->
+                ResponseEntity.status(HttpStatus.CREATED)
+                    .body(mapper.toAccountDetailedResponse(saved))
             );
     }
 
 
     @GetMapping
     public Single<List<AccountResponse>> list() {
-        return findAccountUseCase.findAll().map(accounts ->
+        return listAccountUseCase.findAll().map(accounts ->
                 accounts.stream()
                         .map(mapper::toAccountResponse)
                         .toList()
@@ -83,17 +64,22 @@ public class AccountController extends BaseController {
     @PostMapping
     public Single<ResponseEntity<AccountResponse>> create(
             @RequestBody AccountCreateRequest request,
-            ServerWebExchange exchange) {
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
 
         Account account = mapper.toAccountDomain(request);
-        System.out.println(account.balance()+""+request.balance());
-        String token = exchange.getRequest().getHeaders().getFirst("Authorization");
         return createAccountUseCase.create(account, token)
-                .map(saved ->
-                        ResponseEntity
-                                .status(HttpStatus.CREATED)
-                                .body(mapper.toAccountResponse(saved))
-                );
+                .flatMap(saved -> {
+                    log.debug("saved = {}", saved);
+                    AccountInitialDepositEvent initialDepositEvent = accountLedgerEventMapper.toAccountInitialDeposit(saved);
+                    return accountManagementEventProducer.publishAccountCreated(saved)
+                            .andThen(accountLedgerEventProducer.publishAccountInitialDepositOccurred(initialDepositEvent))
+                            .andThen(
+                                    Single.just(
+                                            ResponseEntity.status(HttpStatus.CREATED)
+                                                    .body(mapper.toAccountResponse(saved))
+                                    )
+                            );
+                });
     }
 
     @PutMapping("/{id}")

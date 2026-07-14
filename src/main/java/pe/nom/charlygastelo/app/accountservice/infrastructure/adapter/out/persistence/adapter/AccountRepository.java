@@ -23,7 +23,9 @@ public class AccountRepository implements AccountRepositoryPort {
 
     @Override
     public Single<Account> save(Account account) {
+        log.debug("account = {}", account);
         AccountDocument document=mapper.toCreateDocument(account);
+        log.debug("document = {}", document);
         return Single.fromPublisher(
                 repository.save(document)
                         .map(mapper::toDomain)

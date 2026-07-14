@@ -11,9 +11,11 @@ import pe.nom.charlygastelo.app.accountservice.domain.model.AccountHolder;
 import pe.nom.charlygastelo.app.accountservice.domain.model.AccountHolderStatus;
 import pe.nom.charlygastelo.app.accountservice.domain.model.HolderType;
 import pe.nom.charlygastelo.app.accountservice.domain.port.repository.AccountHolderRepositoryPort;
+import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.persistence.document.AccountHolderDocument;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.persistence.mapper.AccountHolderPersistentMapper;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.persistence.repository.AccountHolderReactiveRepository;
 
+import java.time.Instant;
 import java.util.List;
 
 @Repository
@@ -48,10 +50,11 @@ public class AccountHolderRepository implements AccountHolderRepositoryPort {
     }
 
     @Override
-    public Single<List<AccountHolder>> findByAccountId(String accountId) {
+    public Flowable<AccountHolder> findByAccountId(String accountId) {
+        log.debug("AccountHolderRepository.findByAccountId {}", accountId);
         return Flowable.fromPublisher(
                 reactiveRepository.findByAccountId(accountId).map(mapper::toDomain)
-        ).toList();
+        );
     }
 
     @Override
@@ -76,4 +79,12 @@ public class AccountHolderRepository implements AccountHolderRepositoryPort {
         );
     }
 
+    @Override
+    public Completable addOwner(String accountId, String customerId) {
+        AccountHolder accountHolderDocument = new AccountHolder(
+               null, accountId, customerId, HolderType.OWNER, Instant.now(), null, Instant.now(),null, AccountHolderStatus.ACTIVE
+        );
+        save(accountHolderDocument);
+        return Completable.complete();
+    }
 }

@@ -4,21 +4,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
-import pe.nom.charlygastelo.app.accountservice.application.usecase.transaction.ProcessCreatedTransactionUseCase;
-import pe.nom.charlygastelo.app.accountservice.domain.model.Transaction;
-import pe.nom.charlygastelo.app.accountservice.domain.port.usecase.FindAccountUseCasePort;
+import pe.nom.charlygastelo.app.accountservice.domain.port.usecase.GetAccountUseCasePort;
+import pe.nom.charlygastelo.app.accountservice.domain.port.usecase.ListAccountUseCasePort;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.event.mapper.AccountEventConsumerMapper;
-import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.event.mapper.TransactionEventConsumerMapper;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.event.AccountResponseProducer;
 import pe.nom.charlygastelo.app.shared.avro.dto.AccountRequestEvent;
-import pe.nom.charlygastelo.app.shared.avro.dto.TransactionCreatedEvent;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class AccountEventConsumer {
 
-    private final FindAccountUseCasePort findAccountAdapter;
+    private final GetAccountUseCasePort getAccountUseCase;
     private final AccountResponseProducer responseProducer;
     private final AccountEventConsumerMapper accountMapper;
 
@@ -37,7 +34,7 @@ public class AccountEventConsumer {
             log.info("[ACCOUNT-REQUEST] Event deserialized successfully. correlationId={}, accountId={}",
                     correlationId, accountId);
 
-            findAccountAdapter.findById(accountId)
+            getAccountUseCase.findById(accountId)
                     .subscribe(
                             account -> {
                                 log.info("[CUSTOMER-REQUEST] Account found. correlationId={}, accountId={}",

@@ -45,7 +45,13 @@
     },
     {
       "name": "balance",
-      "type": "double"
+      "type": "double",
+      "default": 0.0
+    },
+    {
+      "name": "available",
+      "type": "double",
+      "default": 0.0
     },
     {
       "name": "currency",

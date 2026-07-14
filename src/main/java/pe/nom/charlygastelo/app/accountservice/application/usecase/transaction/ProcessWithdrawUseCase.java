@@ -12,29 +12,26 @@ import pe.nom.charlygastelo.app.accountservice.domain.port.repository.AccountRep
 
 import java.math.BigDecimal;
 
+@RequiredArgsConstructor
 @Component
 @Slf4j
-@RequiredArgsConstructor
-public class ProcessDepositUseCase {
+public class ProcessWithdrawUseCase {
 
     private final AccountRepositoryPort accountRepository;
 
     public Single<ProcessedTransaction> execute(Transaction transaction) {
-        log.info("Processing deposit transaction: {}", transaction.id());
+        log.info("Processing withdraw transaction: {}", transaction.id());
 
-        log.debug("Validating transaction: {}", transaction);
         return Single.fromCallable(() -> {
-                    transaction.validateForDeposit();
+                    transaction.validateForWithdraw();
                     return transaction;
                 })
                 .flatMap(tx ->
-                        accountRepository.findById(tx.targetProductId())
-                                .switchIfEmpty(Single.error(new RuntimeException("Target account not found")))
-                                .map(account -> account.credit(tx.amount()))
+                        accountRepository.findById(tx.sourceProductId())
+                                .switchIfEmpty(Single.error(new RuntimeException("Source account not found")))
+                                .map(account -> account.debit(tx.amount()))
                                 .flatMap(accountRepository::save)
-                                .map(target -> new ProcessedTransaction(tx, null,target))
+                                .map(source -> new ProcessedTransaction(tx, source, null))
                 );
     }
-
-
 }

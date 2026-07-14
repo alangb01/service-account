@@ -18,22 +18,19 @@ public class TransactionEventProducer {
     private final KafkaTemplate<String, SpecificRecordBase> kafkaTemplate;
     private final TransactionEventOutMapper transactionMapper;
 
-    @Value("${topic.transaction-completed}")
-    private String transactionCompletedTopic;
+//    @Value("${topic.transaction-completed}")
+//    private String transactionCompletedTopic;
 
     @Value("${topic.transaction-failed}")
     private String transactionFailedTopic;
 
-    public Completable publishTransactionCompleted(Transaction transaction) {
-        return publish(transactionCompletedTopic, transaction.id(), transactionMapper.toTransactionCompletedEvent(transaction));
-    }
-
+//    public Completable publishTransactionCompleted(Transaction transaction) {
+//        return publish(transactionCompletedTopic, transaction.id(), transactionMapper.toTransactionCompletedEvent(transaction));
+//    }
 
     public Completable publishTransactionFailed(Transaction transaction, String reason) {
         return publish(transactionFailedTopic, transaction.id(), transactionMapper.toTransactionFailedEvent(transaction, reason));
     }
-
-
 
     public Completable publish(String topic, String key, SpecificRecordBase event) {
         return Completable.create(emitter -> {
@@ -45,16 +42,20 @@ public class TransactionEventProducer {
                 log.debug("[ACCOUNT-EVENT] Serializing event. key={}, event={}",
                         key, event);
 
-
-
                 log.debug("[ACCOUNT-EVENT] Payload serialized successfully. key={}, payload={}",
                         key, event);
 
                 kafkaTemplate.send(topic, key, event)
                         .whenComplete((result, error) -> {
                             if (error != null) {
-                                log.error("[ACCOUNT-EVENT] Error sending event. topic={}, key={}, reason={}",
-                                        topic, key, error.getMessage(), error);
+                                log.error(
+                                        "Error publishing transaction event. topic={}, key={}, eventClass={}, reason={}",
+                                        topic,
+                                        key,
+                                        event.getClass().getSimpleName(),
+                                        error.getMessage(),
+                                        error
+                                );
                                 emitter.onError(error);
                                 return;
                             }
@@ -70,8 +71,14 @@ public class TransactionEventProducer {
                         });
 
             } catch (Exception e) {
-                log.error("[ACCOUNT-EVENT] Unexpected error serializing or sending event. topic={}, key={}, reason={}",
-                        topic, key, e.getMessage(), e);
+                log.error(
+                        "Error serializing transaction event. topic={}, key={}, eventClass={}, reason={}",
+                        topic,
+                        key,
+                        event.getClass().getSimpleName(),
+                        e.getMessage(),
+                        e
+                );
                 emitter.onError(e);
             }
         });

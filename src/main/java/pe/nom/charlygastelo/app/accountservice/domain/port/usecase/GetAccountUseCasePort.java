@@ -6,12 +6,7 @@ import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
 
 import java.util.List;
 
-public interface FindAccountUseCasePort {
+public interface GetAccountUseCasePort {
 
     Maybe<Account> findById(String id);
-
-    Single<List<Account>> findAll();
-
-    Single<List<Account>> findByCustomerId(String customerId);
-
 }

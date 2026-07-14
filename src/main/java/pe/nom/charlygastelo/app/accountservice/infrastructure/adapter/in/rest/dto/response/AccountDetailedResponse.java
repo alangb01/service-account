@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
-public record AccountResponse(
+public record AccountDetailedResponse(
 
         String id,
 
@@ -20,6 +20,9 @@ public record AccountResponse(
         BigDecimal balance,
 
         String currency,
+
+        List<AccountHolder> holders,
+        List<AccountSigner> signers,
 
         Instant createdAt,
 

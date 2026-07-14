@@ -1,37 +1,35 @@
 package pe.nom.charlygastelo.app.accountservice.application.usecase.account;
 
+import java.math.BigDecimal;
+import org.springframework.stereotype.Component;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 import pe.nom.charlygastelo.app.accountservice.domain.exception.AccountBusinessException;
 import pe.nom.charlygastelo.app.accountservice.domain.exception.AccountLimitExceededException;
 import pe.nom.charlygastelo.app.accountservice.domain.exception.CustomerHasOverdueDebtException;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
 import pe.nom.charlygastelo.app.accountservice.domain.model.AccountType;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Customer;
-import pe.nom.charlygastelo.app.accountservice.domain.model.CustomerType;
-import pe.nom.charlygastelo.app.accountservice.domain.port.AccountEventProducerPort;
 import pe.nom.charlygastelo.app.accountservice.domain.port.client.CardClientPort;
 import pe.nom.charlygastelo.app.accountservice.domain.port.client.CreditClientPort;
 import pe.nom.charlygastelo.app.accountservice.domain.port.client.CustomerClientPort;
+import pe.nom.charlygastelo.app.accountservice.domain.port.repository.AccountHolderRepositoryPort;
 import pe.nom.charlygastelo.app.accountservice.domain.port.repository.AccountRepositoryPort;
 import pe.nom.charlygastelo.app.accountservice.domain.port.usecase.CreateAccountUseCasePort;
 
-import java.math.BigDecimal;
-import java.time.Instant;
 
-@Service
+@Component
 @RequiredArgsConstructor
 @Slf4j
-public class CreateAccountUseCaseService implements CreateAccountUseCasePort {
+public class CreateAccountUseCase implements CreateAccountUseCasePort {
 
     private final AccountRepositoryPort accountRepository;
+    private final AccountHolderRepositoryPort accountHolderRepository;
     private final CustomerClientPort customerClient;
     private final CreditClientPort creditClient;
     private final CardClientPort cardClient;
-    private final AccountEventProducerPort eventProducer;
 
     @Override
     public Single<Account> create(Account account, String token) {
@@ -50,7 +48,7 @@ public class CreateAccountUseCaseService implements CreateAccountUseCasePort {
                 )
                 .flatMap(customer -> {
                     Account newAccount = account.createWith(account);
-                    newAccount = newAccount.withCreatedAt(Instant.now());
+                    log.debug("newAccount = {}", newAccount);
 
                     log.info("[ACCOUNT CREATE] Saving account. customerId={}, number={}",
                             account.customerId(), account.number());
@@ -60,11 +58,9 @@ public class CreateAccountUseCaseService implements CreateAccountUseCasePort {
                 .flatMap(saved -> {
                     log.info("[ACCOUNT CREATE] Account saved successfully. accountId={} balance={}", saved.id(),saved.balance().doubleValue());
 
-
-
-                    return eventProducer.publishAccountCreated(saved)
-                            .andThen(eventProducer.publishAccountInitialDeposit(saved))
-                            .andThen(Single.just(saved));
+                    return accountHolderRepository.addOwner(saved.id(), saved.customerId())
+                                        .andThen(Single.just(saved)
+                    );
                 })
                 .doOnSuccess(acc ->
                         log.info("[ACCOUNT CREATE] Process completed successfully. accountId={}", acc.id()))

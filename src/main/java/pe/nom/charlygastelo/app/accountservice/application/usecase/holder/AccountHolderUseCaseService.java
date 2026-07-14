@@ -5,6 +5,7 @@ import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Single;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import pe.nom.charlygastelo.app.accountservice.domain.exception.AccountHolderNotFoundException;
 import pe.nom.charlygastelo.app.accountservice.domain.exception.BusinessException;
@@ -18,7 +19,7 @@ import pe.nom.charlygastelo.app.accountservice.domain.port.usecase.FindAccountHo
 
 import java.util.List;
 
-@Service
+@Component
 @RequiredArgsConstructor
 @Slf4j
 public class AccountHolderUseCaseService implements FindAccountHolderUseCasePort, AddAccountHolderUseCasePort, RemoveAccountHolderUseCasePort {
@@ -28,7 +29,7 @@ public class AccountHolderUseCaseService implements FindAccountHolderUseCasePort
 
     @Override
     public Single<List<AccountHolder>> findByAccountId(String accountId) {
-        return accountHolderRepository.findByAccountId(accountId);
+        return accountHolderRepository.findByAccountId(accountId).toList();
     }
 
     @Override

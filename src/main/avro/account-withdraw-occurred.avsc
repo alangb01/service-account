@@ -46,7 +46,7 @@
     },
     {
       "name": "balance",
-      "type": "string",
+      "type": "double",
       "doc": "Balance final después del retiro."
     },
     {
@@ -59,6 +59,6 @@
       "type": "string",
       "doc": "ID de la transacción original."
     },
-    { "name": "available", "type": "string" }
+    { "name": "available", "type": "double" }
   ]
 }

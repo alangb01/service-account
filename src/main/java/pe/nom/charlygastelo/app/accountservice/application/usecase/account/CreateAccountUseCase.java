@@ -18,6 +18,9 @@ import pe.nom.charlygastelo.app.accountservice.domain.port.client.CustomerClient
 import pe.nom.charlygastelo.app.accountservice.domain.port.repository.AccountHolderRepositoryPort;
 import pe.nom.charlygastelo.app.accountservice.domain.port.repository.AccountRepositoryPort;
 import pe.nom.charlygastelo.app.accountservice.domain.port.usecase.CreateAccountUseCasePort;
+import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.event.AccountLedgerEventProducer;
+import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.event.AccountManagementEventProducer;
+import pe.nom.charlygastelo.app.shared.avro.dto.AccountInitialDepositEvent;
 
 
 @Component
@@ -30,6 +33,8 @@ public class CreateAccountUseCase implements CreateAccountUseCasePort {
     private final CustomerClientPort customerClient;
     private final CreditClientPort creditClient;
     private final CardClientPort cardClient;
+    private final AccountManagementEventProducer accountManagementEventProducer;
+    private final AccountLedgerEventProducer accountLedgerEventProducer;
 
     @Override
     public Single<Account> create(Account account, String token) {
@@ -61,6 +66,14 @@ public class CreateAccountUseCase implements CreateAccountUseCasePort {
                     return accountHolderRepository.addOwner(saved.id(), saved.customerId())
                                         .andThen(Single.just(saved)
                     );
+                })
+                .flatMap(saved -> {
+                    log.debug("saved = {}", saved);
+
+                    return accountManagementEventProducer.publishAccountCreated(saved)
+                            .andThen(
+                                    Single.just(saved)
+                            );
                 })
                 .doOnSuccess(acc ->
                         log.info("[ACCOUNT CREATE] Process completed successfully. accountId={}", acc.id()))

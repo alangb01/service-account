@@ -18,70 +18,27 @@ public class TransactionEventProducer {
     private final KafkaTemplate<String, SpecificRecordBase> kafkaTemplate;
     private final TransactionEventOutMapper transactionMapper;
 
-//    @Value("${topic.transaction-completed}")
-//    private String transactionCompletedTopic;
-
     @Value("${topic.transaction-failed}")
     private String transactionFailedTopic;
-
-//    public Completable publishTransactionCompleted(Transaction transaction) {
-//        return publish(transactionCompletedTopic, transaction.id(), transactionMapper.toTransactionCompletedEvent(transaction));
-//    }
 
     public Completable publishTransactionFailed(Transaction transaction, String reason) {
         return publish(transactionFailedTopic, transaction.id(), transactionMapper.toTransactionFailedEvent(transaction, reason));
     }
 
     public Completable publish(String topic, String key, SpecificRecordBase event) {
-        return Completable.create(emitter -> {
-            try {
-
-                log.info("[ACCOUNT-EVENT] Preparing event. topic={}, key={}, eventType={}",
-                        topic, key, event.getClass().getSimpleName());
-
-                log.debug("[ACCOUNT-EVENT] Serializing event. key={}, event={}",
-                        key, event);
-
-                log.debug("[ACCOUNT-EVENT] Payload serialized successfully. key={}, payload={}",
-                        key, event);
-
-                kafkaTemplate.send(topic, key, event)
-                        .whenComplete((result, error) -> {
-                            if (error != null) {
-                                log.error(
-                                        "Error publishing transaction event. topic={}, key={}, eventClass={}, reason={}",
-                                        topic,
-                                        key,
-                                        event.getClass().getSimpleName(),
-                                        error.getMessage(),
-                                        error
-                                );
-                                emitter.onError(error);
-                                return;
-                            }
-
-                            log.info("[ACCOUNT-EVENT] Event sent successfully. topic={}, key={}, partition={}, offset={}",
-                                    topic,
-                                    key,
-                                    result.getRecordMetadata().partition(),
-                                    result.getRecordMetadata().offset()
-                            );
-
-                            emitter.onComplete();
-                        });
-
-            } catch (Exception e) {
-                log.error(
-                        "Error serializing transaction event. topic={}, key={}, eventClass={}, reason={}",
-                        topic,
-                        key,
-                        event.getClass().getSimpleName(),
-                        e.getMessage(),
-                        e
-                );
-                emitter.onError(e);
-            }
-        });
+        return Completable.fromFuture(
+            kafkaTemplate.send(topic, key, event)
+                .whenComplete((result, error) -> {
+                    if (error != null) {
+                        log.error("[ACCOUNT-EVENT] Error sending event. topic={}, key={}, reason={}",
+                            topic, key, error.getMessage(), error);
+                    } else {
+                        log.info("[ACCOUNT-EVENT] Event sent successfully. topic={}, key={}, partition={}, offset={}",
+                            topic, key,
+                            result.getRecordMetadata().partition(),
+                            result.getRecordMetadata().offset());
+                    }
+                })
+            );
     }
-
 }

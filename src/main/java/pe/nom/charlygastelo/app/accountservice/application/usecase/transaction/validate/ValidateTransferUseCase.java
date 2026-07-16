@@ -4,11 +4,14 @@ import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Transaction;
+import pe.nom.charlygastelo.app.accountservice.domain.model.TransactionType;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.persistence.adapter.AccountRepository;
 
 import java.math.BigDecimal;
 
+@Component
 @RequiredArgsConstructor
 @Slf4j
 public class ValidateTransferUseCase {
@@ -40,6 +43,31 @@ public class ValidateTransferUseCase {
         );
     }
 
+    public Completable validateTranferToThird(Transaction tx) {
+
+        log.info("[VALIDATE-TRANSFER] Validating transfer to third txId={}, customerId={}",
+                tx.id(), tx.customerId());
+
+        return Completable.mergeArray(
+                        validateAmount(tx),
+                        validateSourceProduct(tx),
+                        validateTargetProduct(tx),
+//                validateCustomerDebt(tx),
+//                validateProfileRules(tx),
+                        validateTransferCompatibility(tx)
+//                validateIdempotency(tx),
+//                validateCorrelation(tx),
+//                validateLimits(tx)
+                )
+                .doOnComplete(() ->
+                        log.info("[VALIDATE-TRANSFER-TO-THIRD] Validation OK txId={}", tx.id())
+                )
+                .doOnError(err ->
+                        log.error("[VALIDATE-TRANSFER-TO-THIRD] Validation FAILED txId={}, reason={}",
+                                tx.id(), err.getMessage())
+                );
+    }
+
     private Completable validateAmount(Transaction tx) {
         return Completable.fromAction(() -> {
             if (tx.amount() == null || tx.amount().compareTo(BigDecimal.ZERO) <= 0) {
@@ -51,8 +79,12 @@ public class ValidateTransferUseCase {
     private Completable validateSourceProduct(Transaction tx) {
         return accountRepository.findById(tx.sourceProductId())
                 .switchIfEmpty(Single.error(new RuntimeException("Source product not found")))
-                .flatMapCompletable(product -> {
-                    if (!product.isActive()) {
+                .flatMapCompletable(account -> {
+                    if(!account.customerId().equals(tx.customerId())){
+                        return Completable.error(new RuntimeException("Source product is not own account"));
+                    }
+
+                    if (!account.isActive()) {
                         return Completable.error(new RuntimeException("Source product inactive"));
                     }
                     return Completable.complete();
@@ -62,8 +94,12 @@ public class ValidateTransferUseCase {
     private Completable validateTargetProduct(Transaction tx) {
         return accountRepository.findById(tx.targetProductId())
                 .switchIfEmpty(Single.error(new RuntimeException("Target product not found")))
-                .flatMapCompletable(product -> {
-                    if (!product.isActive()) {
+                .flatMapCompletable(account -> {
+                    if(tx.type().equals(TransactionType.TRANSFER) && !account.customerId().equals(tx.customerId())) {
+                        return Completable.error(new RuntimeException("Target product is not own account"));
+                    }
+
+                    if (!account.isActive()) {
                         return Completable.error(new RuntimeException("Target product inactive"));
                     }
                     return Completable.complete();

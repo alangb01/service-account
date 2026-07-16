@@ -40,20 +40,6 @@ public record Transaction(
         validateAmount();
     }
 
-    public void validateForTransfer() {
-        if (this.type!=TransactionType.TRANSFER ) {
-            throw new BusinessException("Invalid transaction type for transfer");
-        }
-        validateAmount();
-    }
-
-    public void validateForTransferToThird() {
-        if (this.type!=TransactionType.TRANSFER_TO_THIRD ) {
-            throw new BusinessException("Invalid transaction type for transfer to third");
-        }
-        validateAmount();
-    }
-
     public void validateForCreditPayment() {
         if (this.type!=TransactionType.CREDIT_PAYMENT ) {
             throw new BusinessException("Invalid transaction type for credit payment");
@@ -64,6 +50,13 @@ public record Transaction(
 
     public void validateForDebitCardPayment() {
         if (this.type!=TransactionType.DEBIT_CARD_PAYMENT ) {
+            throw new BusinessException("Invalid transaction type for debit card payment");
+        }
+        validateAmount();
+    }
+
+    public void validateForDebitCardPurchase() {
+        if (this.type!=TransactionType.DEBIT_CARD_PURCHASE ) {
             throw new BusinessException("Invalid transaction type for debit card payment");
         }
         validateAmount();

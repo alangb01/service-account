@@ -1,0 +1,26 @@
+{
+  "type": "record",
+  "name": "AccountTransferOccurredEvent",
+  "namespace": "pe.nom.charlygastelo.app.shared.avro.dto",
+  "fields": [
+    { "name": "eventId", "type": "string" },
+    { "name": "eventType", "type": "string" },
+    { "name": "occurredAt", "type": "string" },
+    { "name": "version", "type": "string" },
+    { "name": "source", "type": "string" },
+
+    { "name": "transactionId", "type": "string" },
+    { "name": "customerId", "type": "string" },
+
+    { "name": "sourceAccountId", "type": "string" },
+    { "name": "targetAccountId", "type": "string" },
+
+    { "name": "amount", "type": "string" },
+
+    { "name": "sourceBalance", "type": "string" },
+    { "name": "sourceAvailable", "type": "string" },
+
+    { "name": "targetBalance", "type": "string" },
+    { "name": "targetAvailable", "type": "string" }
+  ]
+}

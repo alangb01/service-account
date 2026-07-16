@@ -35,8 +35,6 @@ public class AccountController{
     private final GetAccountUseCasePort getAccountUseCase;
     private final UpdateAccountUseCasePort updateAccountUseCase;
     private final DeleteAccountUseCasePort deleteAccountUseCase;
-    private final AccountManagementEventProducerPort accountManagementEventProducer;
-    private final AccountLedgerEventProducerPort accountLedgerEventProducer;
 
     private final AccountRestMapper mapper;
     private final AccountLedgerEventProducerMapper accountLedgerEventMapper;
@@ -68,18 +66,22 @@ public class AccountController{
 
         Account account = mapper.toAccountDomain(request);
         return createAccountUseCase.create(account, token)
-                .flatMap(saved -> {
-                    log.debug("saved = {}", saved);
-                    AccountInitialDepositEvent initialDepositEvent = accountLedgerEventMapper.toAccountInitialDeposit(saved);
-                    return accountManagementEventProducer.publishAccountCreated(saved)
-                            .andThen(accountLedgerEventProducer.publishAccountInitialDepositOccurred(initialDepositEvent))
-                            .andThen(
-                                    Single.just(
-                                            ResponseEntity.status(HttpStatus.CREATED)
-                                                    .body(mapper.toAccountResponse(saved))
-                                    )
-                            );
-                });
+//                .flatMap(saved -> {
+//                    log.debug("saved = {}", saved);
+//                    AccountInitialDepositEvent initialDepositEvent = accountLedgerEventMapper.toAccountInitialDeposit(saved);
+//                    return accountManagementEventProducer.publishAccountCreated(saved)
+//                            .andThen(accountLedgerEventProducer.publishAccountInitialDepositOccurred(initialDepositEvent))
+//                            .andThen(
+//                                    Single.just(
+//                                            ResponseEntity.status(HttpStatus.CREATED)
+//                                                    .body(mapper.toAccountResponse(saved))
+//                                    )
+//                            );
+//                });
+                .map(saved ->
+                        ResponseEntity.status(HttpStatus.CREATED)
+                                .body(mapper.toAccountResponse(saved))
+                );
     }
 
     @PutMapping("/{id}")

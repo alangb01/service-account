@@ -9,6 +9,8 @@ import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
 import pe.nom.charlygastelo.app.accountservice.domain.model.ProcessedTransaction;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Transaction;
 import pe.nom.charlygastelo.app.accountservice.domain.port.repository.AccountRepositoryPort;
+import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.event.AccountLedgerEventProducer;
+import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.event.TransactionEventProducer;
 
 import java.math.BigDecimal;
 
@@ -18,11 +20,12 @@ import java.math.BigDecimal;
 public class ProcessDepositUseCase {
 
     private final AccountRepositoryPort accountRepository;
+    private final AccountLedgerEventProducer accountProducer;
+    private final TransactionEventProducer transactionProducer;
 
-    public Single<ProcessedTransaction> execute(Transaction transaction) {
+    public Completable execute(Transaction transaction) {
         log.info("Processing deposit transaction: {}", transaction.id());
 
-        log.debug("Validating transaction: {}", transaction);
         return Single.fromCallable(() -> {
                     transaction.validateForDeposit();
                     return transaction;
@@ -33,8 +36,19 @@ public class ProcessDepositUseCase {
                                 .map(account -> account.credit(tx.amount()))
                                 .flatMap(accountRepository::save)
                                 .map(target -> new ProcessedTransaction(tx, null,target))
-                );
+                ).flatMapCompletable(processedTransaction ->
+                    accountProducer.publishAccountDepositOccurred(
+                            processedTransaction.target(),
+                            processedTransaction.transaction()
+                        )
+                )
+                .doOnComplete(() -> log.info("[ACCOUNT] transaction completed for txId={}", transaction.id()))
+                .onErrorResumeNext(err -> {
+                    log.error("[ACCOUNT] transaction failed for txId={}, reason={}",
+                            transaction.id(), err.getMessage());
+
+                    return transactionProducer.publishTransactionFailed(transaction, err.getMessage())
+                            .andThen(Completable.error(err));
+                });
     }
-
-
 }

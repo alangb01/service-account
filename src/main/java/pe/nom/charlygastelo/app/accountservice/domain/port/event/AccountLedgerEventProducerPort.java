@@ -8,11 +8,17 @@ import pe.nom.charlygastelo.app.shared.avro.dto.AccountInitialDepositEvent;
 import pe.nom.charlygastelo.app.shared.avro.dto.AccountWithdrawOccurredEvent;
 
 public interface AccountLedgerEventProducerPort {
-    Completable publishAccountWithdrawOccurred(AccountWithdrawOccurredEvent event);
 
-    Completable publishAccountDepositOccurred(AccountDepositOccurredEvent event);
+    Completable publishAccountWithdrawOccurred(Account account, Transaction transaction);
 
-    Completable publishAccountInitialDepositOccurred(AccountInitialDepositEvent event);
+    Completable publishAccountDepositOccurred(Account account, Transaction transaction);
 
-    Completable publishAccountEventFor(Transaction transaction, Account source, Account target);
+    Completable publishAccountTransferOccurred(Account source, Account target, Transaction transaction);
+    Completable publishAccountTransferToThirdOccurred(Account source, Account target, Transaction transaction);
+
+    Completable publishCreditPaymentCompleted(Account account, Transaction transaction);
+
+    Completable publishDebitCardPaymentCompleted(Account account, Transaction transaction);
+
+    Completable publishYankiPaymentCompleted(Account account, Transaction transaction);
 }

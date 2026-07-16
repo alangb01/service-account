@@ -5,44 +5,49 @@ import io.reactivex.rxjava3.core.Single;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import pe.nom.charlygastelo.app.accountservice.domain.exception.BusinessException;
-import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
 import pe.nom.charlygastelo.app.accountservice.domain.model.ProcessedTransaction;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Transaction;
 import pe.nom.charlygastelo.app.accountservice.domain.port.repository.AccountRepositoryPort;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.event.AccountLedgerEventProducer;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.event.TransactionEventProducer;
 
-import java.math.BigDecimal;
-
 @RequiredArgsConstructor
 @Component
 @Slf4j
-public class ProcessWithdrawUseCase {
+public class ProcessDebitCardPaymentUseCase {
 
     private final AccountRepositoryPort accountRepository;
     private final AccountLedgerEventProducer accountProducer;
     private final TransactionEventProducer transactionProducer;
 
     public Completable execute(Transaction tx) {
-        log.info("Processing withdraw tx: {}", tx.id());
+
+        log.info("[ACCOUNT] Processing withdraw for debit card payment. txId={}, accountId={}, amount={}",
+                tx.id(), tx.sourceProductId(), tx.amount());
 
         return Single.fromCallable(() -> {
-                    tx.validateForWithdraw();
+                    tx.validateForDebitCardPayment();   // Validación en dominio
                     return tx;
                 })
                 .flatMap(transaction ->
-                    accountRepository.findById(tx.sourceProductId())
-                        .switchIfEmpty(Single.error(new BusinessException("Source account not found")))
-                        .map(account -> account.debit(tx.amount()))
+                    accountRepository.findById(transaction.sourceProductId())
+                        .switchIfEmpty(Single.error(new RuntimeException("Source account not found")))
+                        .map(account -> {
+                            if (!account.customerId().equals(transaction.customerId())) {
+                                throw new RuntimeException("Account does not belong to this customer");
+                            }
+                            return account.debit(transaction.amount()); // Invariante de dominio
+                        })
                         .flatMap(accountRepository::save)
-                        .map(source -> new ProcessedTransaction(tx, source, null))
-
-                ).flatMapCompletable(processedTransaction ->
-                    accountProducer.publishAccountWithdrawOccurred(
-                            processedTransaction.source(),
-                            processedTransaction.transaction()
+                        .map(updatedAccount ->
+                                new ProcessedTransaction(transaction, updatedAccount, null)
                         )
+                )
+                .flatMapCompletable(processedTransaction ->
+                    accountProducer.publishDebitCardPaymentCompleted(
+                        processedTransaction.target(),
+                        processedTransaction.transaction()
+                    )
                 )
                 .doOnComplete(() -> log.info("[ACCOUNT] transaction completed for txId={}", tx.id()))
                 .onErrorResumeNext(err -> {

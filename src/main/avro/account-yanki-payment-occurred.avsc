@@ -15,9 +15,9 @@
     { "name": "sourceAccountId", "type": "string" },
     { "name": "yankiWalletId", "type": "string" },
 
-    { "name": "amount", "type": "string" },
+    { "name": "amount", "type": "double" },
 
-    { "name": "sourceBalance", "type": "string" },
-    { "name": "sourceAvailable", "type": "string" }
+    { "name": "sourceBalance", "type": "double" },
+    { "name": "sourceAvailable", "type": "double" }
   ]
 }

@@ -1,14 +1,13 @@
 package pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.event.mapper;
 
-import org.apache.avro.specific.SpecificRecordBase;
+import java.time.Instant;
+import java.util.UUID;
 import org.springframework.stereotype.Component;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
 import pe.nom.charlygastelo.app.shared.avro.dto.AccountCreatedEvent;
 import pe.nom.charlygastelo.app.shared.avro.dto.AccountDeletedEvent;
 import pe.nom.charlygastelo.app.shared.avro.dto.AccountUpdatedEvent;
 
-import java.time.Instant;
-import java.util.UUID;
 
 @Component
 public class AccountManagementEventProducerMapper {

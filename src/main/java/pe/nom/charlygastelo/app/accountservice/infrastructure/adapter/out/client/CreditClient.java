@@ -4,6 +4,7 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import io.reactivex.rxjava3.core.Single;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,7 @@ import pe.nom.charlygastelo.app.accountservice.domain.port.client.CreditClientPo
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.client.dto.OverdueDebtResponse;
 
 @Component
+@Slf4j
 public class CreditClient implements CreditClientPort {
     private final WebClient webClient;
 
@@ -30,7 +32,7 @@ public class CreditClient implements CreditClientPort {
     @Retry(name = "creditservice")
     @Override
     public Single<Boolean> hasOverdueDebt(String customerId, String token) {
-        System.out.println("[CreditClient] getById: customerId"+customerId);
+        log.info("[CreditClient] getById: customerId {} token {}",customerId, token);
         return Single.fromPublisher(
                         webClient.get()
                                 .uri("/customers/{customerId}/credits/overdue", customerId)

@@ -5,6 +5,7 @@ import io.reactivex.rxjava3.core.Single;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import pe.nom.charlygastelo.app.accountservice.application.usecase.transaction.command.AccountWithdrawCommand;
 import pe.nom.charlygastelo.app.accountservice.domain.exception.BusinessException;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
 import pe.nom.charlygastelo.app.accountservice.domain.model.ProcessedTransaction;
@@ -24,33 +25,37 @@ public class ProcessWithdrawUseCase {
     private final AccountLedgerEventProducer accountProducer;
     private final TransactionEventProducer transactionProducer;
 
-    public Completable execute(Transaction tx) {
-        log.info("Processing withdraw tx: {}", tx.id());
+    public Completable execute(AccountWithdrawCommand cmd) {
+        log.info("Processing withdraw tx: {}", cmd.transactionId());
 
-        return Single.fromCallable(() -> {
-                    tx.validateForWithdraw();
-                    return tx;
-                })
-                .flatMap(transaction ->
-                    accountRepository.findById(tx.sourceProductId())
+        return  validateForWithdraw(cmd)
+                .andThen(Single.just(cmd))
+                .flatMap(data ->
+                    accountRepository.findById(data.sourceAccountId())
                         .switchIfEmpty(Single.error(new BusinessException("Source account not found")))
-                        .map(account -> account.debit(tx.amount()))
+                        .map(account -> account.debit(data.amount()))
                         .flatMap(accountRepository::save)
-                        .map(source -> new ProcessedTransaction(tx, source, null))
+                        .map(source -> new ProcessedTransaction(
+                                data.transactionId(),
+                                data.customerId(),
+                                data.amount(),
+                                source,
+                                null
+                        ))
 
-                ).flatMapCompletable(processedTransaction ->
-                    accountProducer.publishAccountWithdrawOccurred(
-                            processedTransaction.source(),
-                            processedTransaction.transaction()
-                        )
                 )
-                .doOnComplete(() -> log.info("[ACCOUNT] transaction completed for txId={}", tx.id()))
+                .flatMapCompletable(accountProducer::publishAccountWithdrawOccurred)
+                .doOnComplete(() -> log.info("[ACCOUNT] transaction completed for txId={}", cmd.transactionId()))
                 .onErrorResumeNext(err -> {
                     log.error("[ACCOUNT] transaction failed for txId={}, reason={}",
-                            tx.id(), err.getMessage());
+                            cmd.transactionId(), err.getMessage());
 
-                    return transactionProducer.publishTransactionFailed(tx, err.getMessage())
+                    return transactionProducer.publishTransactionFailed(cmd.transactionId(), cmd.customerId(), err.getMessage())
                             .andThen(Completable.error(err));
                 });
+    }
+
+    private Completable validateForWithdraw(AccountWithdrawCommand cmd) {
+        return Completable.complete();
     }
 }

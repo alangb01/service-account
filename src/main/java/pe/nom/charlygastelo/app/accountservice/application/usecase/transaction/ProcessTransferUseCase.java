@@ -5,6 +5,9 @@ import io.reactivex.rxjava3.core.Single;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import pe.nom.charlygastelo.app.accountservice.application.usecase.transaction.command.AccountDepositCommand;
+import pe.nom.charlygastelo.app.accountservice.application.usecase.transaction.command.AccountTransferCommand;
+import pe.nom.charlygastelo.app.accountservice.application.usecase.transaction.command.AccountWithdrawCommand;
 import pe.nom.charlygastelo.app.accountservice.application.usecase.transaction.validate.ValidateTransferUseCase;
 import pe.nom.charlygastelo.app.accountservice.domain.model.ProcessedTransaction;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Transaction;
@@ -16,58 +19,35 @@ import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.event.
 @Component
 @Slf4j
 public class ProcessTransferUseCase {
+    private final ProcessDepositUseCase processDepositUseCase;
+    private final ProcessWithdrawUseCase processWithdrawUseCase;
 
-    private final AccountRepositoryPort accountRepository;
-    private final ValidateTransferUseCase validateTransferUseCase;
+    public Completable execute(AccountTransferCommand cmd) {
+        log.info("Processing transfer transaction: {}", cmd.transactionId());
 
-    private final AccountLedgerEventProducer accountProducer;
-    private final TransactionEventProducer transactionProducer;
+        AccountWithdrawCommand withdrawCmd=new AccountWithdrawCommand(
+                cmd.transactionId(),
+                cmd.customerId(),
+                cmd.descripcion(),
+                cmd.sourceAccountId(),
+                cmd.amount()
+        );
 
-    public Completable execute(Transaction tx) {
-        log.info("Processing transfer transaction: {}", tx.id());
+        Completable processWithdraw=processWithdrawUseCase.execute(withdrawCmd);
 
-        return validateTransferUseCase.validate(tx)
-            .andThen(Single.just(tx))
-            .flatMap(transaction ->
-                accountRepository.findById(transaction.sourceProductId())
-                    .switchIfEmpty(Single.error(
-                        new RuntimeException("Source account not found")
-                    ))
-                    .map(source -> source.debit(transaction.amount()))
-                    .flatMap(accountRepository::save)
-                    .map(savedSource ->
-                        new ProcessedTransaction(transaction, savedSource, null)
-                    )
-            )
-            .flatMap(processed ->
-                accountRepository.findById(processed.transaction().targetProductId())
-                    .switchIfEmpty(Single.error(
-                        new RuntimeException("Target account not found")
-                    ))
-                    .map(target -> target.credit(processed.transaction().amount()))
-                    .flatMap(accountRepository::save)
-                    .map(savedTarget ->
-                        new ProcessedTransaction(
-                            processed.transaction(),
-                            processed.source(),
-                            savedTarget
-                        )
-                    )
-            )
-            .flatMapCompletable(processed ->
-                    accountProducer.publishAccountTransferOccurred(
-                            processed.source(),
-                            processed.target(),
-                            processed.transaction()
-                    )
-            )
-            .doOnComplete(() -> log.info("[ACCOUNT] transaction completed for txId={}", tx.id()))
-            .onErrorResumeNext(err -> {
-                log.error("[ACCOUNT] transaction failed for txId={}, reason={}",
-                        tx.id(), err.getMessage());
+        AccountDepositCommand depositCmd=new AccountDepositCommand(
+                cmd.transactionId(),
+                cmd.customerId(),
+                cmd.descripcion(),
+                cmd.targetAccountId(),
+                cmd.amount()
+        );
 
-                return transactionProducer.publishTransactionFailed(tx, err.getMessage())
-                        .andThen(Completable.error(err));
-            });
+        Completable processDeposit=processDepositUseCase.execute(depositCmd);
+
+
+
+        return processWithdraw.andThen(processDeposit);
+
     }
 }

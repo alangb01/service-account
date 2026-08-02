@@ -1,64 +1,21 @@
 {
-  "type": "record",
-  "name": "AccountWithdrawOccurredEvent",
-  "namespace": "pe.nom.charlygastelo.app.shared.avro.dto",
-  "doc": "Evento publicado por account-service cuando se debita una cuenta.",
-  "fields": [
-    {
-      "name": "eventId",
-      "type": "string",
-      "doc": "UUID correlacional del evento."
-    },
-    {
-      "name": "eventType",
-      "type": "string",
-      "default": "ACCOUNT_CREATED"
-    },
-    {
-      "name": "occurredAt",
-      "type": "string"
-    },
-    {
-      "name": "version",
-      "type": "string",
-      "default": "1.0"
-    },
-    {
-      "name": "source",
-      "type": "string",
-      "default": "account-service"
-    },
+    "type": "record",
+    "name": "AccountWithdrawOccurredEvent",
+    "namespace": "pe.nom.charlygastelo.app.shared.avro.dto",
+    "fields": [
+      { "name": "eventId", "type": "string" },
+      { "name": "eventType", "type": "string" },
+      { "name": "occurredAt", "type": "string" },
+      { "name": "version", "type": "string" },
+      { "name": "source", "type": "string" },
 
-    {
-      "name": "accountId",
-      "type": "string",
-      "doc": "Cuenta origen que fue debitada."
-    },
-    {
-      "name": "customerId",
-      "type": "string",
-      "doc": "Cliente dueño de la cuenta."
-    },
-    {
-      "name": "amount",
-      "type": "double",
-      "doc": "Monto retirado."
-    },
-    {
-      "name": "balance",
-      "type": "double",
-      "doc": "Balance final después del retiro."
-    },
-    {
-      "name": "reason",
-      "type": "string",
-      "doc": "Razón del retiro: CREDIT_PAYMENT, CARD_PAYMENT, LOAN_PAYMENT, etc."
-    },
-    {
-      "name": "transactionId",
-      "type": "string",
-      "doc": "ID de la transacción original."
-    },
-    { "name": "available", "type": "double" }
-  ]
+      { "name": "transactionId", "type": "string" },
+      { "name": "customerId", "type": "string" },
+      { "name": "accountId", "type": "string" },
+
+      { "name": "amount", "type": "double" },
+      { "name": "balance", "type": "double" },
+      { "name": "available", "type": "double" }
+    ]
 }
+

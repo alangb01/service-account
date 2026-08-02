@@ -5,14 +5,12 @@ import io.reactivex.rxjava3.core.Single;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
+import pe.nom.charlygastelo.app.accountservice.application.usecase.transaction.command.AccountDepositCommand;
+import pe.nom.charlygastelo.app.accountservice.application.usecase.transaction.validate.ValidateDepositUseCase;
 import pe.nom.charlygastelo.app.accountservice.domain.model.ProcessedTransaction;
-import pe.nom.charlygastelo.app.accountservice.domain.model.Transaction;
 import pe.nom.charlygastelo.app.accountservice.domain.port.repository.AccountRepositoryPort;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.event.AccountLedgerEventProducer;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.event.TransactionEventProducer;
-
-import java.math.BigDecimal;
 
 @Component
 @Slf4j
@@ -21,34 +19,36 @@ public class ProcessDepositUseCase {
 
     private final AccountRepositoryPort accountRepository;
     private final AccountLedgerEventProducer accountProducer;
+    private final ValidateDepositUseCase validateDepositUseCase;
     private final TransactionEventProducer transactionProducer;
 
-    public Completable execute(Transaction transaction) {
-        log.info("Processing deposit transaction: {}", transaction.id());
+    public Completable execute(AccountDepositCommand cmd) {
+        log.info("Processing deposit transaction: {}", cmd.transactionId());
 
-        return Single.fromCallable(() -> {
-                    transaction.validateForDeposit();
-                    return transaction;
-                })
-                .flatMap(tx ->
-                        accountRepository.findById(tx.targetProductId())
+        return validateDepositUseCase.validate(cmd)
+                .andThen(Single.just(cmd))
+                .flatMap(data ->
+                        accountRepository.findById(data.targetAccountId())
                                 .switchIfEmpty(Single.error(new RuntimeException("Target account not found")))
-                                .map(account -> account.credit(tx.amount()))
+                                .map(account -> account.credit(data.amount()))
                                 .flatMap(accountRepository::save)
-                                .map(target -> new ProcessedTransaction(tx, null,target))
-                ).flatMapCompletable(processedTransaction ->
-                    accountProducer.publishAccountDepositOccurred(
-                            processedTransaction.target(),
-                            processedTransaction.transaction()
-                        )
-                )
-                .doOnComplete(() -> log.info("[ACCOUNT] transaction completed for txId={}", transaction.id()))
+                                .map(target -> new ProcessedTransaction(
+                                        data.transactionId(),
+                                        data.customerId(),
+                                        data.amount(),
+                                        null,
+                                        target
+                                ))
+                ).flatMapCompletable(accountProducer::publishAccountDepositOccurred)
+                .doOnComplete(() -> log.info("[ACCOUNT] transaction completed for txId={}", cmd.transactionId()))
                 .onErrorResumeNext(err -> {
                     log.error("[ACCOUNT] transaction failed for txId={}, reason={}",
-                            transaction.id(), err.getMessage());
+                            cmd.transactionId(), err.getMessage());
 
-                    return transactionProducer.publishTransactionFailed(transaction, err.getMessage())
+
+                    return transactionProducer.publishTransactionFailed(cmd.transactionId(), cmd.customerId(), err.getMessage())
                             .andThen(Completable.error(err));
                 });
     }
+
 }

@@ -21,8 +21,12 @@ public class TransactionEventProducer {
     @Value("${topic.transaction-failed}")
     private String transactionFailedTopic;
 
-    public Completable publishTransactionFailed(Transaction transaction, String reason) {
-        return publish(transactionFailedTopic, transaction.id(), transactionMapper.toTransactionFailedEvent(transaction, reason));
+    public Completable publishTransactionFailed(String transactionId, String customerId, String reason) {
+        return publish(
+                transactionFailedTopic,
+                transactionId,
+                transactionMapper.toTransactionFailedEvent(transactionId, customerId, reason)
+        );
     }
 
     public Completable publish(String topic, String key, SpecificRecordBase event) {

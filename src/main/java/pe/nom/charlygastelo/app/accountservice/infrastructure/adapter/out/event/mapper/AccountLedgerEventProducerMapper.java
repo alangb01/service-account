@@ -1,17 +1,19 @@
 package pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.event.mapper;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
+import pe.nom.charlygastelo.app.accountservice.domain.model.ProcessedTransaction;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Transaction;
 import pe.nom.charlygastelo.app.shared.avro.dto.*;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
 @Component
+@Slf4j
 public class AccountLedgerEventProducerMapper {
-    private static final String VERSION = "1.0";
-    private static final String SOURCE = "account-service";
 
     private String now() {
         return Instant.now().toString();
@@ -21,36 +23,40 @@ public class AccountLedgerEventProducerMapper {
         return UUID.randomUUID().toString();
     }
 
-    public AccountDepositOccurredEvent toAccountDepositOccurredEvent(Transaction tx, Account target) {
+    public AccountDepositOccurredEvent toAccountDepositOccurredEvent(ProcessedTransaction processedTransaction) {
         return AccountDepositOccurredEvent.newBuilder()
                 .setEventId(UUID.randomUUID().toString())
                 .setEventType("ACCOUNT_DEPOSIT_OCCURRED")
                 .setOccurredAt(Instant.now().toString())
                 .setVersion("1.0")
                 .setSource("account-service")
-                .setTransactionId(tx.id())
-                .setAccountId(target.id())
-                .setCustomerId(target.customerId())
-                .setAmount(tx.amount().toPlainString())
-                .setBalance(target.balance().toPlainString())
-                .setAvailable(target.available().toPlainString())
+
+                .setTransactionId(processedTransaction.transactionId())
+                .setCustomerId(processedTransaction.customerId())
+                .setAccountId(processedTransaction.target().id())
+                .setAmount(processedTransaction.amount().doubleValue())
+                .setBalance(processedTransaction.target().balance().doubleValue())
+                .setAvailable(processedTransaction.target().available().doubleValue())
+
                 .build();
 }
 
-    public AccountWithdrawOccurredEvent toAccountWithdrawOccurredEvent(Transaction tx, Account ac) {
+    public AccountWithdrawOccurredEvent toAccountWithdrawOccurredEvent(ProcessedTransaction processedTransaction) {
+
         return AccountWithdrawOccurredEvent.newBuilder()
                 .setEventId(UUID.randomUUID().toString())
                 .setEventType("ACCOUNT_WITHDRAW_OCCURRED")
                 .setOccurredAt(Instant.now().toString())
                 .setVersion("1.0")
                 .setSource("account-service")
-                .setTransactionId(tx.id())
-                .setCustomerId(tx.customerId())
-                .setAccountId(tx.sourceProductId())
-                .setAmount(tx.amount().doubleValue())
-                .setBalance(ac.balance().doubleValue())
-                .setAvailable(ac.available().doubleValue())
-                .setReason(tx.type().name())
+
+                .setTransactionId(processedTransaction.transactionId())
+                .setCustomerId(processedTransaction.customerId())
+                .setAccountId(processedTransaction.source().id())
+                .setAmount(processedTransaction.amount().doubleValue())
+                .setBalance(processedTransaction.source().balance().doubleValue())
+                .setAvailable(processedTransaction.source().available().doubleValue())
+
                 .build();
     }
 
@@ -62,31 +68,27 @@ public class AccountLedgerEventProducerMapper {
     // ------------------------------------------------------------
     // TRANSFER BETWEEN ACCOUNTS
     // ------------------------------------------------------------
-    public AccountTransferOccurredEvent toAccountTransferOccurredEvent(
-            Transaction tx,
-            Account source,
-            Account target
-    ) {
+    public AccountTransferOccurredEvent toAccountTransferOccurredEvent(ProcessedTransaction processedTransaction) {
         return AccountTransferOccurredEvent.newBuilder()
                 .setEventId(id())
                 .setEventType("ACCOUNT_TRANSFER_OCCURRED")
                 .setOccurredAt(now())
-                .setVersion(VERSION)
-                .setSource(SOURCE)
+                .setVersion("1.0")
+                .setSource("account-service")
 
-                .setTransactionId(tx.id())
-                .setCustomerId(tx.customerId())
+                .setTransactionId(processedTransaction.transactionId())
+                .setCustomerId(processedTransaction.source().customerId())
 
-                .setSourceAccountId(source.id())
-                .setTargetAccountId(target.id())
+                .setSourceAccountId(processedTransaction.source().id())
+                .setTargetAccountId(processedTransaction.target().id())
 
-                .setAmount(tx.amount().toPlainString())
+                .setAmount(processedTransaction.amount().doubleValue())
 
-                .setSourceBalance(source.balance().toPlainString())
-                .setSourceAvailable(source.available().toPlainString())
+                .setSourceBalance(processedTransaction.source().balance().doubleValue())
+                .setSourceAvailable(processedTransaction.source().available().doubleValue())
 
-                .setTargetBalance(target.balance().toPlainString())
-                .setTargetAvailable(target.available().toPlainString())
+                .setTargetBalance(processedTransaction.target().balance().doubleValue())
+                .setTargetAvailable(processedTransaction.target().available().doubleValue())
 
                 .build();
     }
@@ -95,30 +97,28 @@ public class AccountLedgerEventProducerMapper {
     // TRANSFER TO THIRD PARTY
     // ------------------------------------------------------------
     public AccountTransferToThirdOccurredEvent toAccountTransferToThirdOccurredEvent(
-            Transaction tx,
-            Account source,
-            Account third
+            ProcessedTransaction processedTransaction
     ) {
         return AccountTransferToThirdOccurredEvent.newBuilder()
                 .setEventId(id())
                 .setEventType("ACCOUNT_TRANSFER_TO_THIRD_OCCURRED")
                 .setOccurredAt(now())
-                .setVersion(VERSION)
-                .setSource(SOURCE)
+                .setVersion("1.0")
+                .setSource("account-service")
 
-                .setTransactionId(tx.id())
-                .setCustomerId(tx.customerId())
+                .setTransactionId(processedTransaction.transactionId())
+                .setCustomerId(processedTransaction.customerId())
 
-                .setSourceAccountId(source.id())
-                .setThirdPartyAccountId(third.id())
+                .setSourceAccountId(processedTransaction.source().id())
+                .setThirdPartyAccountId(processedTransaction.target().id())
 
-                .setAmount(tx.amount().toPlainString())
+                .setAmount(processedTransaction.amount().toString())
 
-                .setSourceBalance(source.balance().toPlainString())
-                .setSourceAvailable(source.available().toPlainString())
+                .setSourceBalance(processedTransaction.source().balance().toString())
+                .setSourceAvailable(processedTransaction.source().available().toString())
 
-                .setThirdPartyBalance(third.balance().toPlainString())
-                .setThirdPartyAvailable(third.available().toPlainString())
+                .setThirdPartyBalance(processedTransaction.target().balance().toString())
+                .setThirdPartyAvailable(processedTransaction.target().available().toString())
 
                 .build();
     }
@@ -127,26 +127,24 @@ public class AccountLedgerEventProducerMapper {
     // CREDIT PAYMENT
     // ------------------------------------------------------------
     public AccountCreditPaymentEvent toAccountCreditPaymentEvent(
-            Account account,
-            Transaction tx
+            ProcessedTransaction processedTransaction
     ) {
         return AccountCreditPaymentEvent.newBuilder()
                 .setEventId(id())
                 .setEventType("ACCOUNT_CREDIT_PAYMENT_OCCURRED")
                 .setOccurredAt(now())
-                .setVersion(VERSION)
-                .setSource(SOURCE)
+                .setVersion("1.0")
+                .setSource("account-service")
 
-                .setTransactionId(tx.id())
-                .setCustomerId(tx.customerId())
+                .setTransactionId(processedTransaction.transactionId())
+                .setCustomerId(processedTransaction.customerId())
 
-                .setSourceAccountId(account.id())
-                .setCreditId(tx.targetProductId())
+                .setSourceAccountId(processedTransaction.source().id())
 
-                .setAmount(tx.amount().toPlainString())
+                .setAmount(processedTransaction.amount().toString())
 
-                .setSourceBalance(account.balance().toPlainString())
-                .setSourceAvailable(account.available().toPlainString())
+                .setSourceBalance(processedTransaction.source().balance().toString())
+                .setSourceAvailable(processedTransaction.source().available().toString())
 
                 // Si el crédito tiene balance, lo agregas aquí
 //                .setCreditBalance(tx.targetBalance().toPlainString())
@@ -159,26 +157,24 @@ public class AccountLedgerEventProducerMapper {
     // DEBIT CARD PAYMENT
     // ------------------------------------------------------------
     public AccountDebitCardPaymentEvent toAccountDebitCardPaymentEvent(
-            Account account,
-            Transaction tx
+            ProcessedTransaction processedTransaction
     ) {
         return AccountDebitCardPaymentEvent.newBuilder()
                 .setEventId(id())
                 .setEventType("ACCOUNT_DEBIT_CARD_PAYMENT_OCCURRED")
                 .setOccurredAt(now())
-                .setVersion(VERSION)
-                .setSource(SOURCE)
+                .setVersion("1.0")
+                .setSource("account-service")
 
-                .setTransactionId(tx.id())
-                .setCustomerId(tx.customerId())
+                .setTransactionId(processedTransaction.transactionId())
+                .setCustomerId(processedTransaction.customerId())
 
-                .setSourceAccountId(account.id())
-                .setCardId(tx.targetProductId())
+                .setSourceAccountId(processedTransaction.source().id())
 
-                .setAmount(tx.amount().toPlainString())
+                .setAmount(processedTransaction.amount().toString())
 
-                .setSourceBalance(account.balance().toPlainString())
-                .setSourceAvailable(account.available().toPlainString())
+                .setSourceBalance(processedTransaction.source().balance().toString())
+                .setSourceAvailable(processedTransaction.source().available().toString())
 
                 .build();
     }
@@ -187,26 +183,24 @@ public class AccountLedgerEventProducerMapper {
     // YANKI PAYMENT
     // ------------------------------------------------------------
     public AccountYankiPaymentEvent toAccountYankiPaymentEvent(
-            Account account,
-            Transaction tx
+            ProcessedTransaction processedTransaction
     ) {
         return AccountYankiPaymentEvent.newBuilder()
                 .setEventId(id())
                 .setEventType("ACCOUNT_YANKI_PAYMENT_OCCURRED")
                 .setOccurredAt(now())
-                .setVersion(VERSION)
-                .setSource(SOURCE)
+                .setVersion("1.0")
+                .setSource("account-service")
 
-                .setTransactionId(tx.id())
-                .setCustomerId(tx.customerId())
+                .setTransactionId(processedTransaction.transactionId())
+                .setCustomerId(processedTransaction.customerId())
 
-                .setSourceAccountId(account.id())
-                .setYankiWalletId(tx.targetProductId())
+                .setSourceAccountId(processedTransaction.source().id())
 
-                .setAmount(tx.amount().toPlainString())
+                .setAmount(processedTransaction.amount().doubleValue())
 
-                .setSourceBalance(account.balance().toPlainString())
-                .setSourceAvailable(account.available().toPlainString())
+                .setSourceBalance(processedTransaction.source().balance().doubleValue())
+                .setSourceAvailable(processedTransaction.source().available().doubleValue())
 
                 .build();
     }

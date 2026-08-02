@@ -12,30 +12,34 @@ import java.util.UUID;
 @Component
 public class TransactionEventOutMapper {
 
-    public TransactionCompletedEvent toTransactionCompletedEvent(Transaction transaction) {
-        return TransactionCompletedEvent.newBuilder()
-                .setEventId(UUID.randomUUID().toString())
-                .setEventType("TRANSACTION_COMPLETED")
-                .setOccurredAt(Instant.now().toString())
-                .setVersion("1.0")
-                .setSource("account-service")
-                .setTransactionId(value(transaction.id()))
-                .setCustomerId(value(transaction.customerId()))
-                .setStatus("COMPLETED")
-                .setAmount(Double.parseDouble(transaction.amount().toString()))
-                .build();
-    }
+//    public TransactionCompletedEvent toTransactionCompletedEvent(Transaction transaction) {
+//        return TransactionCompletedEvent.newBuilder()
+//                .setEventId(UUID.randomUUID().toString())
+//                .setEventType("TRANSACTION_COMPLETED")
+//                .setOccurredAt(Instant.now().toString())
+//                .setVersion("1.0")
+//                .setSource("account-service")
+//
+//                .setTransactionId(value(transaction.id()))
+//                .setCustomerId(value(transaction.customerId()))
+//                .setStatus("COMPLETED")
+//                .setAmount(Double.parseDouble(transaction.amount().toString()))
+//
+//                .build();
+//    }
 
-    public TransactionFailedEvent toTransactionFailedEvent(Transaction transaction, String reason) {
+    public TransactionFailedEvent toTransactionFailedEvent(String transactionId, String customerId, String reason) {
         return TransactionFailedEvent.newBuilder()
                 .setEventId(UUID.randomUUID().toString())
                 .setEventType("TRANSACTION_FAILED")
                 .setOccurredAt(Instant.now().toString())
                 .setVersion("1.0")
                 .setSource("account-service")
-                .setTransactionId(value(transaction.id()))
-                .setCustomerId(value(transaction.customerId()))
+
+                .setTransactionId(value(transactionId))
+                .setCustomerId(value(customerId))
                 .setReason(reason)
+
                 .build();
     }
 

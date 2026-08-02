@@ -9,4 +9,6 @@ import java.util.List;
 public interface GetAccountUseCasePort {
 
     Maybe<Account> findById(String id);
+
+    Maybe<Account> requestById(String id, String correlationId);
 }

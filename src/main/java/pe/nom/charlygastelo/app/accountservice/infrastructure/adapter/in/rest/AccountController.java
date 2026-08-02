@@ -37,14 +37,13 @@ public class AccountController{
     private final DeleteAccountUseCasePort deleteAccountUseCase;
 
     private final AccountRestMapper mapper;
-    private final AccountLedgerEventProducerMapper accountLedgerEventMapper;
 
     @GetMapping("/{id}")
     public Maybe<ResponseEntity<AccountDetailedResponse>> getById(
             @PathVariable String id
     ) {
         return getAccountUseCase.findById(id).map(saved->
-                ResponseEntity.status(HttpStatus.CREATED)
+                ResponseEntity.status(HttpStatus.OK)
                     .body(mapper.toAccountDetailedResponse(saved))
             );
     }
@@ -66,18 +65,6 @@ public class AccountController{
 
         Account account = mapper.toAccountDomain(request);
         return createAccountUseCase.create(account, token)
-//                .flatMap(saved -> {
-//                    log.debug("saved = {}", saved);
-//                    AccountInitialDepositEvent initialDepositEvent = accountLedgerEventMapper.toAccountInitialDeposit(saved);
-//                    return accountManagementEventProducer.publishAccountCreated(saved)
-//                            .andThen(accountLedgerEventProducer.publishAccountInitialDepositOccurred(initialDepositEvent))
-//                            .andThen(
-//                                    Single.just(
-//                                            ResponseEntity.status(HttpStatus.CREATED)
-//                                                    .body(mapper.toAccountResponse(saved))
-//                                    )
-//                            );
-//                });
                 .map(saved ->
                         ResponseEntity.status(HttpStatus.CREATED)
                                 .body(mapper.toAccountResponse(saved))

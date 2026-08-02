@@ -8,10 +8,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Account;
+import pe.nom.charlygastelo.app.accountservice.domain.model.ProcessedTransaction;
 import pe.nom.charlygastelo.app.accountservice.domain.model.Transaction;
 import pe.nom.charlygastelo.app.accountservice.domain.port.event.AccountLedgerEventProducerPort;
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.event.mapper.AccountLedgerEventProducerMapper;
 import pe.nom.charlygastelo.app.shared.avro.dto.*;
+
+import java.math.BigDecimal;
 
 @Slf4j
 @Component
@@ -43,77 +46,70 @@ public class AccountLedgerEventProducer implements AccountLedgerEventProducerPor
     private String accountYankiPaymentTopic;
 
     @Override
-    public Completable publishAccountWithdrawOccurred(Account ac, Transaction tx) {
-        AccountWithdrawOccurredEvent event = mapper.toAccountWithdrawOccurredEvent(tx,ac);
+    public Completable publishAccountWithdrawOccurred(ProcessedTransaction processedTransaction) {
 
         return  publish(
                 accountWithdrawOccurred,
-                event.getAccountId().toString(),
-                event
+                processedTransaction.transactionId(),
+                mapper.toAccountWithdrawOccurredEvent(processedTransaction)
         );
     }
 
     @Override
-    public Completable publishAccountDepositOccurred(Account ac, Transaction tx) {
-        AccountDepositOccurredEvent event = mapper.toAccountDepositOccurredEvent(tx,ac);
+    public Completable publishAccountDepositOccurred(ProcessedTransaction processedTransaction) {
         return  publish(
                 accountDepositOccurred,
-                event.getAccountId().toString(),
-                event
+                processedTransaction.transactionId(),
+                mapper.toAccountDepositOccurredEvent(processedTransaction)
         );
     }
 
     @Override
-    public Completable publishAccountTransferOccurred(Account source, Account target, Transaction tx) {
-        AccountTransferOccurredEvent event =
-                mapper.toAccountTransferOccurredEvent(tx, source, target);
-
+    public Completable publishAccountTransferOccurred(ProcessedTransaction processedTransaction) {
         return publish(
                 accountTransferOccurredTopic,          
-                event.getSourceAccountId().toString(), 
-                event                                 
+                processedTransaction.transactionId(),
+                mapper.toAccountTransferOccurredEvent(processedTransaction)
         );
     }
 
     @Override
-    public Completable publishAccountTransferToThirdOccurred(Account source, Account third, Transaction tx) {
-        AccountTransferToThirdOccurredEvent event =
-                mapper.toAccountTransferToThirdOccurredEvent(tx, source, third);
+    public Completable publishAccountTransferToThirdOccurred(ProcessedTransaction processedTransaction) {
+
 
         return publish(
                 accountTransferToThirdOccurredTopic,
-                event.getSourceAccountId().toString(),
-                event                                  
+                processedTransaction.transactionId(),
+                mapper.toAccountTransferToThirdOccurredEvent(processedTransaction)                                  
         );
     }
 
     @Override
-    public Completable publishCreditPaymentCompleted(Account account, Transaction transaction) {
-        AccountCreditPaymentEvent event=mapper.toAccountCreditPaymentEvent(account, transaction);
+    public Completable publishCreditPaymentCompleted(ProcessedTransaction processedTransaction) {
+
         return publish(
                 accountCreditPaymentTopic,   
-                event.getSourceAccountId().toString(), 
-                event                                 
+                processedTransaction.transactionId(),
+                mapper.toAccountCreditPaymentEvent(processedTransaction)
         );
     }
 
     @Override
-    public Completable publishDebitCardPaymentCompleted(Account account, Transaction transaction) {
-        AccountDebitCardPaymentEvent event=mapper.toAccountDebitCardPaymentEvent(account, transaction);
+    public Completable publishDebitCardPaymentCompleted(ProcessedTransaction processedTransaction) {
+        AccountDebitCardPaymentEvent event=mapper.toAccountDebitCardPaymentEvent(processedTransaction);
         return publish(
                 accountDebitCardPaymentTopic,   
-                event.getSourceAccountId().toString(), 
+                processedTransaction.transactionId(), 
                 event                                 
         );
     }
 
     @Override
-    public Completable publishYankiPaymentCompleted(Account account, Transaction transaction) {
-        AccountYankiPaymentEvent event=mapper.toAccountYankiPaymentEvent(account, transaction);
+    public Completable publishYankiPaymentCompleted(ProcessedTransaction processedTransaction) {
         return publish(
                 accountYankiPaymentTopic,   
-                event.getSourceAccountId().toString(), 
-                event                                 
+                processedTransaction.transactionId(),
+                mapper.toAccountYankiPaymentEvent(processedTransaction)
         );
     }
 

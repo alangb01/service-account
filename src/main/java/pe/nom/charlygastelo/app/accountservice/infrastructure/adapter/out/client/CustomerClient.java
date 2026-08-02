@@ -4,6 +4,7 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import io.reactivex.rxjava3.core.Single;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
@@ -19,6 +20,7 @@ import pe.nom.charlygastelo.app.accountservice.domain.exception.CustomerServiceU
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.client.mapper.CustomerClientMapper;
 
 @Component
+@Slf4j
 public class CustomerClient implements CustomerClientPort {
     private final WebClient webClient;
     private final CustomerClientMapper mapper;
@@ -30,13 +32,13 @@ public class CustomerClient implements CustomerClientPort {
         this.mapper = clientMapper;
     }
 
-    @CircuitBreaker(name = "customerservice", fallbackMethod = "fallbackAccount")
-    @TimeLimiter(name = "customerservice")
-    @Retry(name = "customerservice")
+    @CircuitBreaker(name = "customer-service", fallbackMethod = "fallbackAccount")
+    @TimeLimiter(name = "customer-service")
+    @Retry(name = "customer-service")
     @Override
     public Single<Customer> getById(String customerId, String token) {
 
-        System.out.println("[CustomerClient] getById: customerId"+customerId);
+        log.info("[CustomerClient] getById: customerId {} token {}",customerId, token);
         return Single.fromPublisher(
                 webClient.get()
                         .uri("/customers/{id}", customerId)

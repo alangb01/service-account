@@ -12,8 +12,9 @@
     { "name": "transactionId", "type": "string" },
     { "name": "customerId", "type": "string" },
     { "name": "accountId", "type": "string" },
-    { "name": "amount", "type": "string" },
-    { "name": "balance", "type": "string" },
-    { "name": "available", "type": "string" }
+
+    { "name": "amount", "type": "double" },
+    { "name": "balance", "type": "double" },
+    { "name": "available", "type": "double" }
   ]
 }

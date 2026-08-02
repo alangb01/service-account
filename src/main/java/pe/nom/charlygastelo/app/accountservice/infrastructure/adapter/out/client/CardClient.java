@@ -4,6 +4,7 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import io.reactivex.rxjava3.core.Single;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,7 @@ import pe.nom.charlygastelo.app.accountservice.domain.port.client.CardClientPort
 import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.out.client.dto.ActiveCreditCardResponse;
 
 @Component
+@Slf4j
 public class CardClient implements CardClientPort {
     private final WebClient webClient;
 
@@ -29,7 +31,7 @@ public class CardClient implements CardClientPort {
     @Retry(name = "cardservice")
     @Override
     public Single<Boolean> hasActiveCreditCard(String customerId, String token) {
-        System.out.println("[CardClient] getById: customerId"+customerId);
+        log.info("[CardClient] getById: customerId {} token {}",customerId,token);
         return Single.fromPublisher(
                         webClient.get()
                                 .uri("/customers/{id}/credit-cards/active", customerId)

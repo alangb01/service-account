@@ -2,5 +2,12 @@ spring:
   application:
     name: service-core-account
 
+
   config:
     import: "configserver:http://localhost:8888"
+
+topic:
+  account-deposit-request: account.deposit-request
+  account-withdraw-request: account.withdraw-request
+  account-transfer-request: account.transfer-request
+  account-transfer-to-third-request: account.transfer-to-third-request

@@ -12,8 +12,8 @@
     { "name": "transactionId", "type": "string" },
     { "name": "customerId", "type": "string" },
 
-    { "name": "sourceProductId", "type": "string" },
-    { "name": "targetProductId", "type": "string" },
+    { "name": "sourceProductId", "type": ["null", "string"], "default": null },
+    { "name": "targetProductId", "type": ["null", "string"], "default": null },
 
     { "name": "sourceProductType", "type": ["null", "string"], "default": null },
     { "name": "targetProductType", "type": ["null", "string"], "default": null },

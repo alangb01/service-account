@@ -32,7 +32,7 @@ COPY --from=build /app/target/account-service-*.jar app.jar
 ENV JAVA_OPTS=""
 
 # Expone el puerto 8085 (se puede mapear desde docker-compose con SERVER_PORT)
-EXPOSE 8085
+#EXPOSE 8085
 
 # Comando de inicio: ejecuta la aplicación con posibles opciones de JVM
 ENTRYPOINT ["sh","-c","java $JAVA_OPTS -jar app.jar"]

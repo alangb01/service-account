@@ -13,7 +13,7 @@ RUN mvn -q -e -DskipTests dependency:go-offline
 
 # Copia el código fuente al contenedor
 COPY src ./src
-
+COPY checkstyle checkstyle
 # Compila y empaqueta el proyecto en un JAR (sin correr tests)
 RUN mvn -q -e -DskipTests package
 

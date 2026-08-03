@@ -62,8 +62,8 @@ public record Transaction(
         validateAmount();
     }
 
-    public void validateForYankiPayment() {
-        if (this.type!=TransactionType.YANKI_PAYMENT ) {
+    public void validateForYankiSend() {
+        if (this.type!=TransactionType.YANKI_SEND ) {
             throw new BusinessException("Invalid transaction type for yanki payment");
         }
         validateAmount();

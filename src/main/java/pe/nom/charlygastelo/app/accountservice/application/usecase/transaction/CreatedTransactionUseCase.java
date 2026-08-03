@@ -27,7 +27,8 @@ public class CreatedTransactionUseCase {
                  TRANSFER,
                  TRANSFER_TO_THIRD,
                  DEPOSIT,
-                 WITHDRAW
+                 WITHDRAW,
+                 YANKI_SEND
                     -> true;
 
             default -> false;
@@ -43,7 +44,7 @@ public class CreatedTransactionUseCase {
 
         return switch (cmd.transactionType()) {
 
-            case TRANSFER, TRANSFER_TO_THIRD -> transferUseCase.execute(toTransferCommand(cmd));
+            case TRANSFER, TRANSFER_TO_THIRD, YANKI_SEND -> transferUseCase.execute(toTransferCommand(cmd));
 
             case DEPOSIT -> depositUseCase.execute(toDepositCommand(cmd));
 

@@ -11,7 +11,7 @@ import pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest.ma
 import java.util.List;
 
 @RestController
-@RequestMapping("/customers")
+@RequestMapping("/api/customers")
 @SecurityRequirement(name = "bearerAuth")
 @RequiredArgsConstructor
 public class CustomerController {

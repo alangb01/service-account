@@ -2,6 +2,7 @@ package pe.nom.charlygastelo.app.accountservice.infrastructure.adapter.in.rest;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -21,7 +22,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/accounts/{accountId}/signers")
+@RequestMapping("/api/accounts/{accountId}/signers")
+@SecurityRequirement(name = "bearerAuth")
 @RequiredArgsConstructor
 public class AccountSignerController {
 
